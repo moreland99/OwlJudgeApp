@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, View, Text, Image, SafeAreaView, StatusBar } from 'react-native';
 import EventAddScreen from './src/screens/EventAddScreen';
 import EventListScreen from './src/screens/EventListScreen';
+import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
+import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 // Import Icons
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 
@@ -65,6 +67,8 @@ function App() {
         <Drawer.Screen name="Home" component={HomeScreen} />
         <Drawer.Screen name="Add New Event" component={EventAddScreen} />
         <Drawer.Screen name="Event List" component={EventListScreen} />
+        <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
+        <Drawer.Screen name="Project Submission" component={ProjectSubmissionScreen} />
         {/* Add other screens here */}
       </Drawer.Navigator>
     </NavigationContainer>
