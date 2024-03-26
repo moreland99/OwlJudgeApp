@@ -12,6 +12,7 @@ import EventAddScreen from './src/screens/EventAddScreen';
 import EventListScreen from './src/screens/EventListScreen';
 import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
+import ScoringScreen from './src/screens/ScoringScreen';
 // Import Icons
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 
@@ -41,6 +42,7 @@ function App() {
           <Drawer.Screen name="Event List" component={EventListScreen} />
           <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
           <Drawer.Screen name="Project Submission" component={ProjectSubmissionScreen} />
+          <Drawer.Screen name="Scoring & Feedback" component={ScoringScreen} />
         </Drawer.Navigator>
       </NavigationContainer>
     </PaperProvider>
