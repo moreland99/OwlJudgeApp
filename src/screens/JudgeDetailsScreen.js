@@ -1,47 +1,59 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { Button, TextInput, Text, useTheme } from 'react-native-paper';
+import LogoComponent from '../components/LogoComponent';
 
 const JudgeDetailsScreen = ({ navigation }) => {
+  const theme = useTheme(); // Use the theme for styling
   const [judgeName, setJudgeName] = useState('');
   const [expertise, setExpertise] = useState('');
   const [contact, setContact] = useState('');
   const [availability, setAvailability] = useState('');
 
   const handleSaveJudgeDetails = () => {
-    // Placeholder function to simulate saving judge details
     alert(`Details for Judge ${judgeName} saved!`);
-    // Later, integrate with your backend to actually save these details
-    navigation.goBack(); // Navigate back to the previous screen after saving
+    navigation.goBack(); // Navigate back after saving
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Add/Edit Judge Details</Text>
+    <ScrollView contentContainerStyle={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <LogoComponent />
+      <Text style={[styles.title, {color: theme.colors.text}]}>Add/Edit Judge Details</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Judge Name"
+        mode="outlined"
+        label="Judge Name"
         value={judgeName}
         onChangeText={setJudgeName}
+        style={styles.input}
       />
       <TextInput
-        style={styles.input}
-        placeholder="Expertise Area"
+        mode="outlined"
+        label="Expertise Area"
         value={expertise}
         onChangeText={setExpertise}
+        style={styles.input}
       />
       <TextInput
-        style={styles.input}
-        placeholder="Contact Information"
+        mode="outlined"
+        label="Contact Information"
         value={contact}
         onChangeText={setContact}
+        style={styles.input}
       />
       <TextInput
-        style={styles.input}
-        placeholder="Availability"
+        mode="outlined"
+        label="Availability"
         value={availability}
         onChangeText={setAvailability}
+        style={styles.input}
       />
-      <Button title="Save Details" onPress={handleSaveJudgeDetails} />
+      <Button 
+        mode="contained" 
+        onPress={handleSaveJudgeDetails} 
+        style={styles.button}
+      >
+        Save Details
+      </Button>
     </ScrollView>
   );
 };
@@ -49,8 +61,7 @@ const JudgeDetailsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    //justifyContent: 'center',
     padding: 20,
   },
   title: {
@@ -61,11 +72,11 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     marginVertical: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
+  },
+  button: {
+    marginTop: 10,
   },
 });
 
 export default JudgeDetailsScreen;
+

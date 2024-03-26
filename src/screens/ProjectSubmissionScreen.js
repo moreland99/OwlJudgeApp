@@ -1,35 +1,84 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { Button, TextInput, Text, Menu, Divider, useTheme } from 'react-native-paper';
+import LogoComponent from '../components/LogoComponent';
+
+const categories = ['Category 1', 'Category 2', 'Category 3']; // Example categories
+const topics = ['Topic 1', 'Topic 2', 'Topic 3']; // Example topics
 
 const ProjectSubmissionScreen = ({ navigation }) => {
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
-  // Add more states as needed for project submission
+  const theme = useTheme(); // Use the custom theme for styling
+  const [projectNumber, setProjectNumber] = useState('');
+  const [title, setTitle] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [isCategoryMenuVisible, setCategoryMenuVisible] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState('');
+  const [isTopicMenuVisible, setTopicMenuVisible] = useState(false);
+  const [sponsoringCompany, setSponsoringCompany] = useState('');
+
+  const openCategoryMenu = () => setCategoryMenuVisible(true);
+  const closeCategoryMenu = () => setCategoryMenuVisible(false);
+
+  const openTopicMenu = () => setTopicMenuVisible(true);
+  const closeTopicMenu = () => setTopicMenuVisible(false);
 
   const handleSubmit = () => {
     alert('Project submitted successfully!');
-    // Later, this will integrate with your backend
     navigation.goBack();
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Submit Your Project</Text>
+    <ScrollView contentContainerStyle={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <LogoComponent />
+      <Text style={[styles.title, {color: theme.colors.text}]}>Submit Your Project</Text>
       <TextInput
+        mode="outlined"
+        label="Project Number"
+        value={projectNumber}
+        onChangeText={setProjectNumber}
         style={styles.input}
-        placeholder="Project Name"
-        value={projectName}
-        onChangeText={setProjectName}
+        theme={{ colors: { primary: theme.colors.primary }}}
       />
       <TextInput
+        mode="outlined"
+        label="Title"
+        value={title}
+        onChangeText={setTitle}
         style={styles.input}
-        placeholder="Project Description"
-        value={projectDescription}
-        onChangeText={setProjectDescription}
-        multiline
+        theme={{ colors: { primary: theme.colors.primary }}}
       />
-      {/* Add more inputs as needed */}
-      <Button title="Submit Project" onPress={handleSubmit} />
+      <Menu
+        visible={isCategoryMenuVisible}
+        onDismiss={closeCategoryMenu}
+        anchor={<Button mode="outlined" onPress={openCategoryMenu} style={styles.menuButton}>{selectedCategory || 'Select a Category'}</Button>}>
+        {categories.map((category) => (
+          <Menu.Item key={category} onPress={() => { setSelectedCategory(category); closeCategoryMenu(); }} title={category} />
+        ))}
+      </Menu>
+      <Menu
+        visible={isTopicMenuVisible}
+        onDismiss={closeTopicMenu}
+        anchor={<Button mode="outlined" onPress={openTopicMenu} style={styles.menuButton}>{selectedTopic || 'Select a Topic'}</Button>}>
+        {topics.map((topic) => (
+          <Menu.Item key={topic} onPress={() => { setSelectedTopic(topic); closeTopicMenu(); }} title={topic} />
+        ))}
+      </Menu>
+      <TextInput
+        mode="outlined"
+        label="Sponsoring Company"
+        value={sponsoringCompany}
+        onChangeText={setSponsoringCompany}
+        style={styles.input}
+        theme={{ colors: { primary: theme.colors.primary }}}
+      />
+      <Button 
+        mode="contained" 
+        onPress={handleSubmit} 
+        style={styles.button}
+        color={theme.colors.primary}
+      >
+        Submit Project
+      </Button>
     </ScrollView>
   );
 };
@@ -45,12 +94,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    width: '100%',
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    borderRadius: 5,
+  },
+  menuButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  button: {
+    marginTop: 10,
   },
 });
 
