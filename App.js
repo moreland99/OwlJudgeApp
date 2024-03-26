@@ -21,14 +21,17 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFB81C" />
-      <Text style={styles.title}>Owl Judge</Text>
-      <Text style={styles.intro}>
-        Welcome to Owl Judge, your platform for managing and participating in coding contests at Kennesaw State University.
-      </Text>
+      <View style={styles.textContent}>
+        <Text style={styles.title}>Owl Judge</Text>
+        <Text style={styles.intro}>
+          Welcome to Owl Judge, your platform for managing and participating in coding contests at Kennesaw State University.
+        </Text>
+      </View>
       <Image source={require('./src/assets/owlJudgeLogo.png')} style={styles.logo} />
     </SafeAreaView>
   );
 };
+
 
 const Drawer = createDrawerNavigator();
 
@@ -57,11 +60,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 20,
   },
+  textContent: {
+    alignItems: 'center',
+    marginHorizontal: 30, // Adjust this value to control the side margins
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#231F20',
     marginBottom: 20,
+    textAlign: 'center', // Ensures the text is centered
   },
   intro: {
     textAlign: 'center',
@@ -75,6 +83,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
 });
+
 
 export default App;
 
