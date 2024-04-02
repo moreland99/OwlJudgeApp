@@ -1,4 +1,5 @@
 import * as React from 'react';
+import './localeConfig';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
