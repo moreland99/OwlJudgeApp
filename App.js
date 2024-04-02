@@ -1,4 +1,5 @@
 import * as React from 'react';
+import './localeConfig';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,8 +14,12 @@ import EventListScreen from './src/screens/EventListScreen';
 import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
+import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import CreateAccount from './src/screens/CreateAccount';
 // Import Icons
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
+import JudgeListScreen from './src/screens/JudgeListScreen';
 
 
 const HomeScreen = () => {
@@ -32,7 +37,6 @@ const HomeScreen = () => {
   );
 };
 
-
 const Drawer = createDrawerNavigator();
 
 function App() {
@@ -41,11 +45,15 @@ function App() {
       <NavigationContainer>
         <Drawer.Navigator initialRouteName="Home">
           <Drawer.Screen name="Home" component={HomeScreen} />
+          <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
           <Drawer.Screen name="Add New Event" component={EventAddScreen} />
           <Drawer.Screen name="Event List" component={EventListScreen} />
           <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
+          <Drawer.Screen name="Judge List" component={JudgeListScreen} />
           <Drawer.Screen name="Project Submission" component={ProjectSubmissionScreen} />
           <Drawer.Screen name="Scoring & Feedback" component={ScoringScreen} />
+          <Drawer.Screen name="Login" component={LoginScreen} />
+          <Drawer.Screen name="Create Account" component={CreateAccount} />
         </Drawer.Navigator>
       </NavigationContainer>
     </PaperProvider>

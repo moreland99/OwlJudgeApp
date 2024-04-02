@@ -3,8 +3,10 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, TextInput, Text, useTheme, Card, IconButton } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
 import LogoComponent from '../components/LogoComponent';
+import { getDatabase, ref, push } from 'firebase/database';
+import { app } from '../firebase/firebaseConfig';
 
-const EventAddScreen = ({ navigation }) => {
+const EventAddScreen = ({ navigation }) => { 
   const theme = useTheme();
   const [eventName, setEventName] = useState('');
   const [startDate, setStartDate] = useState(new Date());
@@ -17,8 +19,27 @@ const EventAddScreen = ({ navigation }) => {
   const [openTimePickerEnd, setOpenTimePickerEnd] = useState(false);
 
   const handleAddEvent = () => {
-    alert(`Event "${eventName}" added!`);
-    navigation.goBack();
+    const newEvent = {
+      name: eventName,
+      startDate: startDate.toString(),
+      endDate: endDate.toString(),
+      startTime: startTime.toString(),
+      endTime: endTime.toString(),
+    };
+
+    // Get a reference to the database service
+    const database = getDatabase(app);
+    const eventsRef = ref(database, 'events');
+
+  // Save the new event to the database
+  push(eventsRef, newEvent)
+      .then(() => {
+        alert(`Event "${eventName}" added!`);
+        navigation.goBack();
+      })
+      .catch((error) => {
+        alert("Failed to add event: " + error.message);
+      });
   };
 
   return (
@@ -39,6 +60,7 @@ const EventAddScreen = ({ navigation }) => {
             Pick Start Date
           </Button>
           <DatePickerModal
+            locale="en-US"
             mode="single"
             visible={openStartDatePicker}
             onDismiss={() => setOpenStartDatePicker(false)}
@@ -52,6 +74,7 @@ const EventAddScreen = ({ navigation }) => {
             Pick End Date
           </Button>
           <DatePickerModal
+            locale="en-US"
             mode="single"
             visible={openEndDatePicker}
             onDismiss={() => setOpenEndDatePicker(false)}
@@ -65,6 +88,7 @@ const EventAddScreen = ({ navigation }) => {
             Pick Start Time
           </Button>
           <TimePickerModal
+            locale="en-US"
             visible={openTimePickerStart}
             onDismiss={() => setOpenTimePickerStart(false)}
             onConfirm={(params) => {
@@ -78,6 +102,7 @@ const EventAddScreen = ({ navigation }) => {
             Pick End Time
           </Button>
           <TimePickerModal
+            locale="en-US"
             visible={openTimePickerEnd}
             onDismiss={() => setOpenTimePickerEnd(false)}
             onConfirm={(params) => {
