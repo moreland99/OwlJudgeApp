@@ -2,17 +2,27 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, TextInput, Text, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
+import { getDatabase, ref, push } from 'firebase/database';
+import { app } from '../firebase/firebaseConfig';
 
 const JudgeDetailsScreen = ({ navigation }) => {
-  const theme = useTheme(); // Use the theme for styling
+  const theme = useTheme();
   const [judgeName, setJudgeName] = useState('');
   const [expertise, setExpertise] = useState('');
   const [contact, setContact] = useState('');
   const [availability, setAvailability] = useState('');
 
   const handleSaveJudgeDetails = () => {
-    alert(`Details for Judge ${judgeName} saved!`);
-    navigation.goBack(); // Navigate back after saving
+    const database = getDatabase(app);
+    const judgesRef = ref(database, 'judges');
+    const newJudge = { judgeName, expertise, contact, availability };
+
+    push(judgesRef, newJudge).then(() => {
+      alert(`Details for Judge ${judgeName} saved!`);
+      navigation.goBack();
+    }).catch((error) => {
+      alert("Failed to save judge details: " + error.message);
+    });
   };
 
   return (
@@ -61,7 +71,6 @@ const JudgeDetailsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    //justifyContent: 'center',
     padding: 20,
   },
   title: {

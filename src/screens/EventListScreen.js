@@ -1,20 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
-import { Button, Card, Title, Paragraph, Text, useTheme } from 'react-native-paper';
+import { Button, Card, Title, Paragraph, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-
-const eventsData = [
-  { id: '1', name: 'Spring Hackathon', date: '2023-03-12' },
-  { id: '2', name: 'Alumni Meetup', date: '2023-04-20' },
-  { id: '3', name: 'Tech Conference', date: '2023-05-15' },
-  { id: '4', name: 'Summer Coding Camp', date: '2023-06-10' },
-  { id: '5', name: 'Innovation Challenge', date: '2023-07-22' },
-
-  // Add more events as needed
-];
+import { getDatabase, ref, onValue } from 'firebase/database';
+import { app } from '../firebase/firebaseConfig';
 
 const EventListScreen = ({ navigation }) => {
-  const theme = useTheme(); // Use the theme
+  const [events, setEvents] = useState([]);
+  const theme = useTheme();
+
+  useEffect(() => {
+    const database = getDatabase(app);
+    const eventsRef = ref(database, 'events');
+
+    // Listen for database changes, updating state accordingly
+    const unsubscribe = onValue(eventsRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedEvents = data ? Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      })) : [];
+      setEvents(loadedEvents);
+    }, {
+      onlyOnce: true // If you want to fetch the data only once; remove this option if you want real-time updates
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
 
   const renderItem = ({ item }) => (
     <Card style={[styles.item, { backgroundColor: theme.colors.surface }]}>
@@ -27,9 +40,9 @@ const EventListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-    <LogoComponent />
+      <LogoComponent />
       <FlatList
-        data={eventsData}
+        data={events}
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
@@ -54,8 +67,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
   },
-  // Removed title style as Title component from React Native Paper comes with its own styling
 });
 
 export default EventListScreen;
-
