@@ -2,29 +2,28 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, TextInput, Text, Menu, Divider, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-
-const categories = ['Category 1', 'Category 2', 'Category 3']; // Example categories
-const topics = ['Topic 1', 'Topic 2', 'Topic 3']; // Example topics
+import { getDatabase, ref, push } from 'firebase/database';
+import { app } from '../firebase/firebaseConfig';
 
 const ProjectSubmissionScreen = ({ navigation }) => {
-  const theme = useTheme(); // Use the custom theme for styling
+  const theme = useTheme();
   const [projectNumber, setProjectNumber] = useState('');
   const [title, setTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [isCategoryMenuVisible, setCategoryMenuVisible] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState('');
-  const [isTopicMenuVisible, setTopicMenuVisible] = useState(false);
   const [sponsoringCompany, setSponsoringCompany] = useState('');
 
-  const openCategoryMenu = () => setCategoryMenuVisible(true);
-  const closeCategoryMenu = () => setCategoryMenuVisible(false);
-
-  const openTopicMenu = () => setTopicMenuVisible(true);
-  const closeTopicMenu = () => setTopicMenuVisible(false);
-
   const handleSubmit = () => {
-    alert('Project submitted successfully!');
-    navigation.goBack();
+    const database = getDatabase(app);
+    const projectsRef = ref(database, 'projects');
+    const newProject = { projectNumber, title, selectedCategory, selectedTopic, sponsoringCompany };
+
+    push(projectsRef, newProject).then(() => {
+      alert('Project submitted successfully!');
+      navigation.goBack();
+    }).catch((error) => {
+      alert("Failed to submit project: " + error.message);
+    });
   };
 
   return (
@@ -47,22 +46,7 @@ const ProjectSubmissionScreen = ({ navigation }) => {
         style={styles.input}
         theme={{ colors: { primary: theme.colors.primary }}}
       />
-      <Menu
-        visible={isCategoryMenuVisible}
-        onDismiss={closeCategoryMenu}
-        anchor={<Button mode="outlined" onPress={openCategoryMenu} style={styles.menuButton}>{selectedCategory || 'Select a Category'}</Button>}>
-        {categories.map((category) => (
-          <Menu.Item key={category} onPress={() => { setSelectedCategory(category); closeCategoryMenu(); }} title={category} />
-        ))}
-      </Menu>
-      <Menu
-        visible={isTopicMenuVisible}
-        onDismiss={closeTopicMenu}
-        anchor={<Button mode="outlined" onPress={openTopicMenu} style={styles.menuButton}>{selectedTopic || 'Select a Topic'}</Button>}>
-        {topics.map((topic) => (
-          <Menu.Item key={topic} onPress={() => { setSelectedTopic(topic); closeTopicMenu(); }} title={topic} />
-        ))}
-      </Menu>
+      {/* Implement Category and Topic selection UI */}
       <TextInput
         mode="outlined"
         label="Sponsoring Company"
@@ -96,13 +80,10 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 10,
   },
-  menuButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
   button: {
     marginTop: 10,
   },
 });
 
 export default ProjectSubmissionScreen;
+
