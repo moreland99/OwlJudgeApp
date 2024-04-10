@@ -1,13 +1,20 @@
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
-import './localeConfig';
-import { NavigationContainer } from '@react-navigation/native'; 
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createNativeStackNavigator } from '@react-navigation/native-stack'; // Ensure you're using it if needed
-import { PaperProvider } from 'react-native-paper';
-import CustomTheme from './theme'; 
-import { auth } from './src/firebase/firebaseConfig';
+import React, { useState, useEffect } from "react"; // Import useState and useEffect
+import "./localeConfig";
+import { NavigationContainer } from "@react-navigation/native";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createNativeStackNavigator } from "@react-navigation/native-stack"; // Ensure you're using it if needed
+import { PaperProvider } from "react-native-paper";
+import CustomTheme from "./theme";
+import { auth } from "./src/firebase/firebaseConfig";
 console.log(auth);
-import { StyleSheet, View, Text, Image, SafeAreaView, StatusBar } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  SafeAreaView,
+  StatusBar,
+} from "react-native";
 // Import Screens
 import EventAddScreen from "./src/screens/EventAddScreen";
 import EventListScreen from "./src/screens/EventListScreen";
@@ -18,9 +25,9 @@ import AdminDashboardScreen from "./src/screens/AdminDashboardScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import CreateAccount from "./src/screens/CreateAccount";
 // Import Icons
-import { MaterialCommunityIcons } from 'react-native-vector-icons';
-import JudgeListScreen from './src/screens/JudgeListScreen';
-import LogoutButton from './src/components/LogoutButton';
+import { MaterialCommunityIcons } from "react-native-vector-icons";
+import JudgeListScreen from "./src/screens/JudgeListScreen";
+import LogoutButton from "./src/components/LogoutButton";
 
 const Stack = createNativeStackNavigator(); // For authentication flow
 const Drawer = createDrawerNavigator();
@@ -45,14 +52,22 @@ function App() {
 
   if (isLoggedIn === null) {
     // Consider adding a loading indicator here
-    return <SafeAreaView><Text>Loading...</Text></SafeAreaView>;
+    return (
+      <SafeAreaView>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
   }
 
-  return ( 
+  return (
     <PaperProvider theme={CustomTheme}>
       <NavigationContainer>
-        <Drawer.Navigator initialRouteName="Home">
-          <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
+        <Drawer.Navigator initialRouteName="Login">
+          <Drawer.Screen name="Login" component={LoginScreen} />
+          <Drawer.Screen
+            name="Admin Dashboard"
+            component={AdminDashboardScreen}
+          />
           <Drawer.Screen name="Add New Event" component={EventAddScreen} />
           <Drawer.Screen name="Event List" component={EventListScreen} />
           <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
@@ -62,7 +77,6 @@ function App() {
             component={ProjectSubmissionScreen}
           />
           <Drawer.Screen name="Scoring & Feedback" component={ScoringScreen} />
-          <Drawer.Screen name="Login" component={LoginScreen} />
           <Drawer.Screen name="Create Account" component={CreateAccount} />
           <Drawer.Screen name="Logout" component={LogoutButton} />
         </Drawer.Navigator>
