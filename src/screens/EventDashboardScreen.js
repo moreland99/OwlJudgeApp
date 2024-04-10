@@ -4,6 +4,24 @@ import { Card, Title, Paragraph, FAB, useTheme } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import EventAddForm from './EventAddScreen'; // This component is assumed to be a modal-ready form
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', { 
+      month: 'long', 
+      day: '2-digit', 
+      year: 'numeric'
+  }).format(date);
+};
+
+const formatTime = (timeString) => {
+  const time = new Date(timeString);
+  return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+  }).format(time);
+};
+
 const EventDashboardScreen = ({ navigation }) => {
   const [events, setEvents] = useState([]);
   const theme = useTheme();
@@ -32,22 +50,19 @@ const dynamicStyles = StyleSheet.create({
     },
   });
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView style={styles.scrollView}>
+  return (<View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView style={styles.scrollView}>
       {events.map((event) => (
-    <TouchableOpacity key={event.id} onPress={() => { /* Navigate to event detail */ }}>
-        <Card style={styles.card}>
+        <TouchableOpacity key={event.id} onPress={() => { /* Navigate to event detail */ }}>
+          <Card style={styles.card}>
             <Card.Content>
-                <Title style={{ color: theme.colors.primary }}>{event.name}</Title>
-                <Paragraph>Start Date: {event.startDate}</Paragraph>
-                <Paragraph>End Date: {event.endDate}</Paragraph>
-                <Paragraph>Start Time: {event.startTime}</Paragraph>
-                <Paragraph>End Time: {event.endTime}</Paragraph>
+              <Title style={{ color: theme.colors.primary }}>{event.name}</Title>
+              <Paragraph>Start Date: {formatDate(event.startDate)} at {formatTime(event.startTime)}</Paragraph>
+              <Paragraph>End Date: {formatDate(event.endDate)} at {formatTime(event.endTime)}</Paragraph>
             </Card.Content>
-        </Card>
-    </TouchableOpacity>
-))}
+          </Card>
+        </TouchableOpacity>
+      ))}
       </ScrollView>
       <FAB
   style={dynamicStyles.fab}
