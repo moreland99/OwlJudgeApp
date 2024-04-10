@@ -1,75 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Modal, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { Card, Title, Paragraph, FAB, useTheme } from 'react-native-paper';
-import { getDatabase, ref, onValue } from 'firebase/database';
-import EventAddForm from './EventAddScreen'; // This component is assumed to be a modal-ready form
+import { ScrollView, StyleSheet, View, TouchableOpacity, Alert, Modal } from 'react-native';
+import { Button, Card, Title, Paragraph, FAB, useTheme } from 'react-native-paper';
+import { getDatabase, ref, onValue, remove } from 'firebase/database';
+import EventAddForm from './EventAddScreen'; // This component is for adding new events
+import EventEditForm from './EventEditForm'; // Assuming this is your event edit form component
 
+// Utility functions to format dates and times
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', { 
-      month: 'long', 
-      day: '2-digit', 
-      year: 'numeric'
-  }).format(date);
+  return new Intl.DateTimeFormat('en-US', { month: 'long', day: '2-digit', year: 'numeric' }).format(date);
 };
 
 const formatTime = (timeString) => {
   const time = new Date(timeString);
-  return new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
-  }).format(time);
+  return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).format(time);
+};
+
+// Function to delete an event
+const deleteEvent = (eventId) => {
+  Alert.alert("Confirm Delete", "Are you sure you want to delete this event?", [
+    { text: "Cancel", style: "cancel" },
+    {
+      text: "OK", onPress: () => {
+        const db = getDatabase();
+        const eventRef = ref(db, `events/${eventId}`);
+        remove(eventRef).then(() => Alert.alert("Event deleted successfully")).catch(error => Alert.alert("Failed to delete event", error.message));
+      }
+    }
+  ]);
 };
 
 const EventDashboardScreen = ({ navigation }) => {
   const [events, setEvents] = useState([]);
   const theme = useTheme();
   const [isAddModalVisible, setAddModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState(null);
 
   useEffect(() => {
     const db = getDatabase();
     const eventsRef = ref(db, 'events/');
     onValue(eventsRef, (snapshot) => {
-        const data = snapshot.val();
-        const loadedEvents = data ? Object.keys(data).map(key => ({
-            id: key,
-            ...data[key]
-        })) : [];
-        setEvents(loadedEvents);
+      const data = snapshot.val();
+      const loadedEvents = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+      setEvents(loadedEvents);
     });
-}, []);
+  }, []);
 
-const dynamicStyles = StyleSheet.create({
-    fab: {
-      position: 'absolute',
-      margin: 16,
-      right: 0,
-      bottom: 0,
-      backgroundColor: theme.colors.primary,
-    },
-  });
+  // Function to trigger event edit modal
+  const editEvent = (event) => {
+    setCurrentEvent(event);
+    setIsEditModalVisible(true);
+  };
 
-  return (<View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-    <ScrollView style={styles.scrollView}>
-      {events.map((event) => (
-        <TouchableOpacity key={event.id} onPress={() => { /* Navigate to event detail */ }}>
-          <Card style={styles.card}>
-            <Card.Content>
-              <Title style={{ color: theme.colors.primary }}>{event.name}</Title>
-              <Paragraph>Start Date: {formatDate(event.startDate)} at {formatTime(event.startTime)}</Paragraph>
-              <Paragraph>End Date: {formatDate(event.endDate)} at {formatTime(event.endTime)}</Paragraph>
-            </Card.Content>
-          </Card>
-        </TouchableOpacity>
-      ))}
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView style={styles.scrollView}>
+        {events.map((event) => (
+          <TouchableOpacity key={event.id} onPress={() => { /* Navigate to event detail if necessary */ }}>
+            <Card style={styles.card}>
+              <Card.Content>
+                <Title style={{ color: theme.colors.primary }}>{event.name}</Title>
+                <Paragraph>Start Date: {formatDate(event.startDate)} at {formatTime(event.startTime)}</Paragraph>
+                <Paragraph>End Date: {formatDate(event.endDate)} at {formatTime(event.endTime)}</Paragraph>
+              </Card.Content>
+              <Card.Actions>
+                <Button onPress={() => editEvent(event)}>Edit</Button>
+                <Button onPress={() => deleteEvent(event.id)}>Delete</Button>
+              </Card.Actions>
+            </Card>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
       <FAB
-  style={dynamicStyles.fab}
-  icon="plus"
-  onPress={() => navigation.navigate('AddEvent')}
-  theme={{ colors: { accent: theme.colors.accent } }}
-/>
+        style={styles.fab}
+        icon="plus"
+        onPress={() => setAddModalVisible(true)}
+        theme={{ colors: { accent: theme.colors.accent } }}
+      />
       <Modal
         visible={isAddModalVisible}
         animationType="slide"
@@ -77,9 +85,17 @@ const dynamicStyles = StyleSheet.create({
       >
         <EventAddForm onClose={() => setAddModalVisible(false)} />
       </Modal>
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        {/* Assuming EventEditForm is a component you've created for editing events */}
+        <EventEditForm event={currentEvent} onClose={() => setIsEditModalVisible(false)} />
+      </Modal>
     </View>
   );
-}; 
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -91,9 +107,17 @@ const styles = StyleSheet.create({
   card: {
     marginVertical: 8,
     padding: 10,
-    borderRadius: 8, // Rounded corners for a modern look
-    elevation: 4, // Subtle shadow for depth
+    borderRadius: 8,
+    elevation: 4,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });
 
 export default EventDashboardScreen;
+
+ 
