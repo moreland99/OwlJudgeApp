@@ -8,9 +8,10 @@ const CustomTheme = {
     ...DefaultTheme.colors,
     primary: '#FFB81C', // KSU Gold
     accent: '#231F20', // KSU Black
-    background: '#FFFFFF', // Optional: adjust background color as needed
-    text: '#231F20', // Optional: adjust text color as needed
+    background: '#FFFFFF', // White background
+    text: '#231F20', // Black text for better contrast
   },
 };
 
 export default CustomTheme;
+

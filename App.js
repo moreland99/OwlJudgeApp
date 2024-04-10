@@ -1,28 +1,26 @@
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import React, { useState, useEffect } from 'react';
 import './localeConfig';
-import { NavigationContainer } from '@react-navigation/native'; 
+import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createNativeStackNavigator } from '@react-navigation/native-stack'; // Ensure you're using it if needed
-import { PaperProvider } from 'react-native-paper';
-import CustomTheme from './theme'; 
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { PaperProvider, ActivityIndicator } from 'react-native-paper';
+import CustomTheme from './theme';
 import { auth } from './src/firebase/firebaseConfig';
-console.log(auth);
-import { StyleSheet, View, Text, Image, SafeAreaView, StatusBar } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+
 // Import Screens
-import EventAddScreen from './src/screens/EventAddScreen';
-import EventListScreen from './src/screens/EventListScreen';
+import EventDashboardScreen from './src/screens/EventDashboardScreen';
 import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import CreateAccount from './src/screens/CreateAccount';
-// Import Icons
-import { MaterialCommunityIcons } from 'react-native-vector-icons';
+import EventAddScreen from './src/screens/EventAddScreen'; // Ensure this is correctly imported
 import JudgeListScreen from './src/screens/JudgeListScreen';
 import LogoutButton from './src/components/LogoutButton';
 
-const Stack = createNativeStackNavigator(); // For authentication flow
+const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const Drawer = createDrawerNavigator();
 
 const AuthStack = () => (
@@ -32,8 +30,18 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
+// Stack Navigator for Event Dashboard and Add Event Screen
+const EventStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="EventDashboard" component={EventDashboardScreen} options={{ headerShown: true }} />
+    <Stack.Screen name="AddEvent" component={EventAddScreen} options={{ presentation: 'modal' }} />
+
+    {/* Add more screens as needed */}
+  </Stack.Navigator>
+);
+
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(null); // null indicates loading state
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -44,26 +52,27 @@ function App() {
   }, []);
 
   if (isLoggedIn === null) {
-    // Consider adding a loading indicator here
-    return <SafeAreaView><Text>Loading...</Text></SafeAreaView>;
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator animating={true} color={CustomTheme.colors.primary} />
+      </SafeAreaView>
+    );
   }
 
-  return ( 
+  return (
     <PaperProvider theme={CustomTheme}>
+      <StatusBar backgroundColor={CustomTheme.colors.primary} barStyle="light-content" />
       <NavigationContainer>
-      {isLoggedIn ? (
-        <Drawer.Navigator initialRouteName="Home">
-          <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
-          <Drawer.Screen name="Add New Event" component={EventAddScreen} />
-          <Drawer.Screen name="Event List" component={EventListScreen} />
-          <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
-          <Drawer.Screen name="Judge List" component={JudgeListScreen} />
-          <Drawer.Screen name="Project Submission" component={ProjectSubmissionScreen} />
-          <Drawer.Screen name="Scoring & Feedback" component={ScoringScreen} />
-          <Drawer.Screen name="Login" component={LoginScreen} />
-          <Drawer.Screen name="Create Account" component={CreateAccount} />
-          <Drawer.Screen name="Logout" component={LogoutButton} />
-        </Drawer.Navigator>
+        {isLoggedIn ? (
+          <Drawer.Navigator initialRouteName="Admin Dashboard">
+            <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
+            <Drawer.Screen name="Event Dashboard" component={EventStack} />
+            <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
+            <Drawer.Screen name="Judge List" component={JudgeListScreen} />
+            <Drawer.Screen name="Project Submission" component={ProjectSubmissionScreen} />
+            <Drawer.Screen name="Scoring & Feedback" component={ScoringScreen} />
+            <Drawer.Screen name="Logout" component={LogoutButton} />
+          </Drawer.Navigator>
         ) : (
           <AuthStack />
         )}
