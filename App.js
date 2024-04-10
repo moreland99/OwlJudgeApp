@@ -34,9 +34,14 @@ const AuthStack = () => (
 const EventStack = () => (
   <Stack.Navigator>
     <Stack.Screen name="EventDashboard" component={EventDashboardScreen} options={{ headerShown: true }} />
-    <Stack.Screen name="AddEvent" component={EventAddScreen} options={{ presentation: 'modal' }} />
-
-    {/* Add more screens as needed */}
+    <Stack.Screen
+      name="AddEvent"
+      component={EventAddScreen}
+      options={{
+        presentation: 'modal',
+        gestureEnabled: true, // Explicitly enable gestures
+      }}
+    />
   </Stack.Navigator>
 );
 

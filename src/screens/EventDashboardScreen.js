@@ -75,16 +75,10 @@ const EventDashboardScreen = ({ navigation }) => {
       <FAB
         style={styles.fab}
         icon="plus"
-        onPress={() => setAddModalVisible(true)}
+        onPress={() => navigation.navigate('AddEvent')}
         theme={{ colors: { accent: theme.colors.accent } }}
       />
-      <Modal
-        visible={isAddModalVisible}
-        animationType="slide"
-        onRequestClose={() => setAddModalVisible(false)}
-      >
-        <EventAddForm onClose={() => setAddModalVisible(false)} />
-      </Modal>
+      
       <Modal
         visible={isEditModalVisible}
         animationType="slide"
