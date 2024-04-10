@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Image } from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet, Image,Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Card } from 'react-native-paper';
 import { app } from '../firebase/firebaseConfig';
 import { auth } from '../firebase/firebaseConfig';
@@ -25,6 +25,7 @@ const LoginScreen = () => {
   };
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessiblie={false}>
     <View style={styles.container}>
       <Card style={styles.cardStyle}>
         <Card.Content>
@@ -37,6 +38,7 @@ const LoginScreen = () => {
         </Card.Content>
       </Card>
     </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -44,12 +46,13 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: 'center',
+    //alignItems: 'center',
     padding: 20,
   },
   cardStyle: {
     flex: 1,
-    //justifyContent: 'center',
-    //alignItems: 'center',
+    maxWidth: 400,
+    padding: 20,
   },
   logo: {
     width: 100,

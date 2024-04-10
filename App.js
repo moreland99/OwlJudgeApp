@@ -51,6 +51,7 @@ function App() {
   return ( 
     <PaperProvider theme={CustomTheme}>
       <NavigationContainer>
+      {isLoggedIn ? (
         <Drawer.Navigator initialRouteName="Home">
           <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
           <Drawer.Screen name="Add New Event" component={EventAddScreen} />
@@ -63,6 +64,9 @@ function App() {
           <Drawer.Screen name="Create Account" component={CreateAccount} />
           <Drawer.Screen name="Logout" component={LogoutButton} />
         </Drawer.Navigator>
+        ) : (
+          <AuthStack />
+        )}
       </NavigationContainer>
     </PaperProvider>
   );
