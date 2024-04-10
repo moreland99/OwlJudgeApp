@@ -1,12 +1,12 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react'; // Import useState and useEffect
 import './localeConfig';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native'; 
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { PaperProvider } from 'react-native-paper'; // Import PaperProvider React Native Paper
-import { useTheme } from 'react-native-paper'; // Import useTheme
-import CustomTheme from './theme';
+import { createNativeStackNavigator } from '@react-navigation/native-stack'; // Ensure you're using it if needed
+import { PaperProvider } from 'react-native-paper';
+import CustomTheme from './theme'; 
+import { auth } from './src/firebase/firebaseConfig';
+console.log(auth);
 import { StyleSheet, View, Text, Image, SafeAreaView, StatusBar } from 'react-native';
 // Import Screens
 import EventAddScreen from './src/screens/EventAddScreen';
@@ -20,31 +20,38 @@ import CreateAccount from './src/screens/CreateAccount';
 // Import Icons
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 import JudgeListScreen from './src/screens/JudgeListScreen';
+import LogoutButton from './src/components/LogoutButton';
 
-
-const HomeScreen = () => {
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFB81C" />
-      <View style={styles.textContent}>
-        <Text style={styles.title}>Owl Judge</Text>
-        <Text style={styles.intro}>
-          Welcome to Owl Judge, your platform for managing and participating in coding contests at Kennesaw State University.
-        </Text>
-      </View>
-      <Image source={require('./src/assets/owlJudgeLogo.png')} style={styles.logo} />
-    </SafeAreaView>
-  );
-};
-
+const Stack = createNativeStackNavigator(); // For authentication flow
 const Drawer = createDrawerNavigator();
 
+const AuthStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Screen name="Create Account" component={CreateAccount} />
+  </Stack.Navigator>
+);
+
 function App() {
-  return (
+  const [isLoggedIn, setIsLoggedIn] = useState(null); // null indicates loading state
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (isLoggedIn === null) {
+    // Consider adding a loading indicator here
+    return <SafeAreaView><Text>Loading...</Text></SafeAreaView>;
+  }
+
+  return ( 
     <PaperProvider theme={CustomTheme}>
       <NavigationContainer>
         <Drawer.Navigator initialRouteName="Home">
-          <Drawer.Screen name="Home" component={HomeScreen} />
           <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
           <Drawer.Screen name="Add New Event" component={EventAddScreen} />
           <Drawer.Screen name="Event List" component={EventListScreen} />
@@ -54,6 +61,7 @@ function App() {
           <Drawer.Screen name="Scoring & Feedback" component={ScoringScreen} />
           <Drawer.Screen name="Login" component={LoginScreen} />
           <Drawer.Screen name="Create Account" component={CreateAccount} />
+          <Drawer.Screen name="Logout" component={LogoutButton} />
         </Drawer.Navigator>
       </NavigationContainer>
     </PaperProvider>
