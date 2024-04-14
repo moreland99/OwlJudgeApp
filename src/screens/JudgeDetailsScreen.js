@@ -21,15 +21,19 @@ const JudgeDetailsScreen = ({ navigation }) => {
   const handleSaveJudgeDetails = () => {
     const database = getDatabase(app);
     const judgesRef = ref(database, 'judges');
+    const newJudgeRef = push(judgesRef);
+  
     const newJudgeData = {
+      id: newJudgeRef.key,
       judgeName,
       expertise,
       contact: { email, phoneNumber },
       availability: availability.toISOString(),
+      events: {} // Placeholder for event IDs this judge is associated with
     };
-
-    push(judgesRef, newJudgeData)
-      .then(() => alert(`Details for Judge ${judgeName} saved!`))
+  
+    set(newJudgeRef, newJudgeData)
+      .then(() => alert(`Details for Judge ${judgeName} saved with ID ${newJudgeRef.key}!`))
       .catch((error) => alert(`Failed to save judge details: ${error.message}`));
   };
 

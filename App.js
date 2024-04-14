@@ -14,6 +14,7 @@ import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
+import JudgeDashboardScreen from './src/screens/JudgeDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import CreateAccount from './src/screens/CreateAccount';
 import EventAddScreen from './src/screens/EventAddScreen'; // Ensure this is correctly imported
@@ -71,6 +72,7 @@ function App() {
         {isLoggedIn ? (
           <Drawer.Navigator initialRouteName="Admin Dashboard">
             <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
+            <Drawer.Screen name="Judge Dashboard" component={JudgeDashboardScreen} />
             <Drawer.Screen name="Event Dashboard" component={EventStack} />
             <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />
             <Drawer.Screen name="Judge List" component={JudgeListScreen} />
