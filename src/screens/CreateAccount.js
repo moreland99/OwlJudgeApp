@@ -15,15 +15,32 @@ const CreateAccount = () => {
   const handleSignUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      // Use the UID from the authentication as the key for the judge's entry
+      const judgeRef = ref(getDatabase(), 'judges/' + user.uid);
+  
+      // Save the judge details to the Realtime Database
+      await set(judgeRef, {
+        uid: user.uid, // Use Firebase Authentication UID as judge ID
+        email: email,
+        role: 'judge',
+        // Add any additional judge details here
+      });
+  
       console.log('Account created!');
-      Alert.alert('Account created!', 'Your account has been created successfully. Please login to continue.', [{ text: 'OK' }]);
-
+      Alert.alert(
+        'Account created!',
+        'Your judge account has been created successfully. Please login to continue.',
+        [{ text: 'OK' }]
+      );
       navigation.navigate('Login'); // Navigate back to the login screen
     } catch (error) {
       console.error(error);
       Alert.alert('Error', error.message, [{ text: 'OK' }]);
     }
   };
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

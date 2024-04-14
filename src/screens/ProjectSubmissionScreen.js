@@ -16,14 +16,27 @@ const ProjectSubmissionScreen = ({ navigation }) => {
   const handleSubmit = () => {
     const database = getDatabase(app);
     const projectsRef = ref(database, 'projects');
-    const newProject = { projectNumber, title, selectedCategory, selectedTopic, sponsoringCompany };
-
-    push(projectsRef, newProject).then(() => {
-      alert('Project submitted successfully!');
-      navigation.goBack();
-    }).catch((error) => {
-      alert("Failed to submit project: " + error.message);
-    });
+    const newProjectRef = push(projectsRef);
+  
+    const newProject = {
+      id: newProjectRef.key,
+      projectNumber,
+      title,
+      selectedCategory,
+      selectedTopic,
+      sponsoringCompany,
+      event: '', // You will need to update this with the event ID
+      assignedJudge: '' // And this with the judge ID
+    };
+  
+    set(newProjectRef, newProject)
+      .then(() => {
+        alert('Project submitted successfully with ID ' + newProjectRef.key + '!');
+        navigation.goBack();
+      })
+      .catch((error) => {
+        alert("Failed to submit project: " + error.message);
+      });
   };
 
   return (

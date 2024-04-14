@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, TextInput, Text, useTheme, Card, IconButton } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
 import LogoComponent from '../components/LogoComponent';
-import { getDatabase, ref, push } from 'firebase/database';
+import { getDatabase, ref, push, set } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 
 const EventAddScreen = ({ navigation }) => { 
@@ -19,28 +19,31 @@ const EventAddScreen = ({ navigation }) => {
   const [openTimePickerEnd, setOpenTimePickerEnd] = useState(false);
 
   const handleAddEvent = () => {
-    const newEvent = {
-      name: eventName,
-      startDate: startDate.toString(),
-      endDate: endDate.toString(),
-      startTime: startTime.toString(),
-      endTime: endTime.toString(),
-    };
-
-    // Get a reference to the database service
     const database = getDatabase(app);
     const eventsRef = ref(database, 'events');
-
-  // Save the new event to the database
-  push(eventsRef, newEvent)
+    const newEventRef = push(eventsRef); // Firebase generates a unique key
+  
+    const newEvent = {
+      id: newEventRef.key,
+      name: eventName,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      judges: {}, // Placeholder for judge IDs
+      projects: {} // Placeholder for project IDs
+    };
+  
+    set(newEventRef, newEvent) // Use the set() method with the unique reference
       .then(() => {
-        alert(`Event "${eventName}" added!`);
+        alert(`Event "${eventName}" added with ID ${newEventRef.key}!`);
         navigation.goBack();
       })
       .catch((error) => {
         alert("Failed to add event: " + error.message);
       });
   };
+  
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
