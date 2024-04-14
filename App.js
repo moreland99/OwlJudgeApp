@@ -17,9 +17,10 @@ import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import JudgeDashboardScreen from './src/screens/JudgeDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import CreateAccount from './src/screens/CreateAccount';
-import EventAddScreen from './src/screens/EventAddScreen'; // Ensure this is correctly imported
+import EventAddScreen from './src/screens/EventAddScreen';
 import JudgeListScreen from './src/screens/JudgeListScreen';
 import LogoutButton from './src/components/LogoutButton';
+import AssignJudgesScreen from './src/screens/AssignJudgesScreen';
 
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const Drawer = createDrawerNavigator();
@@ -46,6 +47,15 @@ const EventStack = () => (
   </Stack.Navigator>
 );
 
+// Stack Navigator for Admin Dashboard and Assign Judges
+const AdminNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
+    <Stack.Screen name="Assign Judges" component={AssignJudgesScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(null);
 
@@ -71,7 +81,7 @@ function App() {
       <NavigationContainer>
         {isLoggedIn ? (
           <Drawer.Navigator initialRouteName="Admin Dashboard">
-            <Drawer.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
+            <Drawer.Screen name="Admin Dashboard" component={AdminNavigator} />
             <Drawer.Screen name="Judge Dashboard" component={JudgeDashboardScreen} />
             <Drawer.Screen name="Event Dashboard" component={EventStack} />
             <Drawer.Screen name="Judge Details" component={JudgeDetailsScreen} />

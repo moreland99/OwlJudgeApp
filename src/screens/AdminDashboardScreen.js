@@ -1,30 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { Button, Card, useTheme, Modal, Portal, List } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { assignJudgeToEvent } from '../firebase/firebaseOperations';
 
 const AdminDashboardScreen = ({ navigation }) => {
-  // State for event, project, judge counts, and recent scores
   const [eventCount, setEventCount] = useState(0);
   const [projectCount, setProjectCount] = useState(0);
   const [judgeCount, setJudgeCount] = useState(0);
-  const [recentScores, setRecentScores] = useState([]);
-  // State for modal visibility
   const [isModalVisible, setModalVisible] = useState(false);
-  // State for lists of events and judges
   const [eventsList, setEventsList] = useState([]);
   const [judgesList, setJudgesList] = useState([]);
-  // State for selected event and judge
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedJudgeId, setSelectedJudgeId] = useState(null);
   
   const theme = useTheme();
+  const styles = getDynamicStyles(theme);
 
   useEffect(() => {
     const db = getDatabase();
-    // Fetch events
     const eventListRef = ref(db, 'events/');
+    const judgeListRef = ref(db, 'judges/');
+
     onValue(eventListRef, (snapshot) => {
       const events = [];
       snapshot.forEach((childSnapshot) => {
@@ -37,8 +34,6 @@ const AdminDashboardScreen = ({ navigation }) => {
       setEventCount(events.length);
     });
 
-    // Fetch judges
-    const judgeListRef = ref(db, 'judges/');
     onValue(judgeListRef, (snapshot) => {
       const judges = [];
       snapshot.forEach((childSnapshot) => {
@@ -50,123 +45,46 @@ const AdminDashboardScreen = ({ navigation }) => {
       setJudgesList(judges);
       setJudgeCount(judges.length);
     });
-
-    // Fetch scores (the existing logic here seems to be for a different purpose)
-    // ...
   }, []);
 
-  // Function to handle opening the modal
-  const openModal = () => {
-    setModalVisible(true);
-  };
+  const openModal = () => setModalVisible(true);
+  const closeModal = () => setModalVisible(false);
+  const handleSelectEvent = (eventId) => setSelectedEventId(eventId);
+  const handleSelectJudge = (judgeId) => setSelectedJudgeId(judgeId);
 
-  // Function to handle selecting an event
-  const handleSelectEvent = (eventId) => {
-    setSelectedEventId(eventId);
-  };
-
-  // Function to handle selecting a judge
-  const handleSelectJudge = (judgeId) => {
-    setSelectedJudgeId(judgeId);
-  };
-
-  // Function to handle assigning the selected judge to the selected event
-  const handleAssignJudge = () => {
-    if (selectedEventId && selectedJudgeId) {
-      assignJudgeToEvent(selectedEventId, selectedJudgeId)
-        .then(() => {
-          setModalVisible(false);
-          Alert.alert('Success', 'Judge has been assigned to the event.');
-        })
-        .catch((error) => {
-          Alert.alert('Error', error.message);
-        });
-    } else {
-      Alert.alert('Error', 'Please select both an event and a judge.');
-    }
-  };
   return (
-    <ScrollView style={styles.container}>
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Text style={styles.title}>Admin Dashboard</Text>
-          
-          {/* Stats Display */}
-          <Text style={styles.statText}>Total Events: {eventCount}</Text>
-          <Text style={styles.statText}>Total Projects: {projectCount}</Text>
-          <Text style={styles.statText}>Total Judges: {judgeCount}</Text>
-          
-          {/* Quick Link Buttons */}
-          <Button 
-            icon="calendar-check" 
-            mode="contained" 
-            onPress={() => navigation.navigate('Event List')}
-            style={styles.button}
-            color={theme.colors.primary}>View Events</Button>
-          <Button 
-            icon="account-group" 
-            mode="contained" 
-            onPress={() => navigation.navigate('Judge Details')}
-            style={styles.button}
-            color={theme.colors.accent}>View Judges</Button>
-          <Button 
-            icon="book-open-page-variant" 
-            mode="contained" 
-            onPress={() => navigation.navigate('Project Submission')}
-            style={styles.button}
-            color={theme.colors.primary}>View Projects</Button>
-          <Button 
-            icon="scoreboard" 
-            mode="contained" 
-            onPress={() => navigation.navigate('Scoring & Feedback')}
-            style={styles.button}
-            color={theme.colors.accent}>View Scores</Button>
-
-          <Button
-            icon="account-plus"
-            mode="contained"
-            onPress={() => setModalVisible(true)}
-            style={styles.button}
-            color={theme.colors.primary}>
-            Assign Judges to Events
-          </Button>
-        </Card.Content>
-      </Card>
+    <ScrollView style={styles.fullscreen}>
+      <View style={styles.container}>
+      <View style={styles.statsContainer}>
+        <StatCard label="Total Events" count={eventCount} styles={styles} />
+        <StatCard label="Total Projects" count={projectCount} styles={styles} />
+        <StatCard label="Total Judges" count={judgeCount} styles={styles} />
+        </View>
+        <View style={styles.quickLinksContainer}>
+          <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('Event Dashboard')} styles={styles} />
+          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('Judge List')} styles={styles} />
+          <QuickLinkButton title="View Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('Project Submission')} styles={styles} />
+          <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
+          <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('Assign Judges')} styles={styles} />
+        </View>
+      </View>
       <Portal>
-        <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+        <Modal visible={isModalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
           <Card>
             <Card.Title title="Assign Judge to Event" />
             <Card.Content>
-              {/* Dropdown for selecting an event */}
-              <List.Accordion
-                title="Select Event"
-                expanded={selectedEventId !== null}>
+              <List.Accordion title="Select Event" expanded={selectedEventId !== null}>
                 {eventsList.map(event => (
-                  <List.Item
-                    key={event.id}
-                    title={event.name}
-                    onPress={() => setSelectedEventId(event.id)}
-                  />
+                  <List.Item key={event.id} title={event.name} onPress={() => handleSelectEvent(event.id)} />
                 ))}
               </List.Accordion>
-              {/* Dropdown for selecting a judge */}
-              <List.Accordion
-                title="Select Judge"
-                expanded={selectedJudgeId !== null}>
+              <List.Accordion title="Select Judge" expanded={selectedJudgeId !== null}>
                 {judgesList.map(judge => (
-                  <List.Item
-                    key={judge.id}
-                    title={judge.email}
-                    onPress={() => setSelectedJudgeId(judge.id)}
-                  />
+                  <List.Item key={judge.id} title={judge.email} onPress={() => handleSelectJudge(judge.id)} />
                 ))}
               </List.Accordion>
             </Card.Content>
             <Card.Actions>
-              <Button onPress={() => {
-                assignJudgeToEvent(selectedEventId, selectedJudgeId);
-                setModalVisible(false);
-              }}>Assign</Button>
             </Card.Actions>
           </Card>
         </Modal>
@@ -175,30 +93,54 @@ const AdminDashboardScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
+const getDynamicStyles = (theme) => StyleSheet.create({
+  fullscreen: {
     flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  container: {
+    flex: 1, // Ensure the container takes full available space
+    padding: 10,
+  },
+  quickLinksContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around', // Changed to 'space-around' for better spacing
+  },
+  quickLinkCard: {
+    width: '48%', // Slightly less than half to fit two items per row
+    margin: 2, // Uniform margin for vertical and horizontal
+    padding: 10,
+    alignItems: 'center', // Center items inside the card
   },
   card: {
-    margin: 10,
-    padding: 20,
-    borderRadius: 8,
+    borderRadius: 15,
+    flex: 1, // Ensures the card stretches to fill the space
+    justifyContent: 'center', // Centers content vertically within the card
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+  buttonIcon: {
+    justifyContent: 'center',
+    fontSize: 16, // Adjusted for better text visibility
   },
-  statText: {
-    fontSize: 16,
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    // other styles like padding or margin if necessary
+  },
+  
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
     marginBottom: 10,
   },
-  button: {
-    marginTop: 10,
-    paddingVertical: 5,
-    marginHorizontal: 10,
-    borderRadius: 20,
+  statLabel: {
+    fontSize: 16,
+    color: theme.colors.onSurface,
+  },
+  statCount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
   },
   modalContainer: {
     backgroundColor: 'white',
@@ -206,5 +148,25 @@ const styles = StyleSheet.create({
     margin: 20,
   },
 });
+
+
+const StatCard = ({ label, count, styles }) => (
+  <View style={styles.statCard}>
+    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={styles.statCount}>{count}</Text>
+  </View>
+);
+
+const QuickLinkButton = ({ title, iconName, onPress, styles }) => (
+  <TouchableOpacity style={styles.quickLinkCard} onPress={onPress}>
+    <Card style={styles.card}>
+      <Card.Content>
+        <Button icon={iconName} labelStyle={{ fontSize: styles.buttonIcon.fontSize }} numberOfLines={3} style={styles.buttonIcon}>
+          {title}
+        </Button>
+      </Card.Content>
+    </Card>
+  </TouchableOpacity>
+);
 
 export default AdminDashboardScreen;
