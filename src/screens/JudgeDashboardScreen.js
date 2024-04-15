@@ -1,41 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { Card, Title } from 'react-native-paper';
-import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get, onValue, off } from 'firebase/database';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getDatabase, ref, get } from 'firebase/database';
+import { useRoute } from '@react-navigation/native';
 import CustomTheme from '../../theme';
 
 const JudgeDashboardScreen = () => {
   const [assignedEvents, setAssignedEvents] = useState([]);
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const [user, setUser] = useState(null);
   const db = getDatabase();
+  const route = useRoute();
+  const judgeKey = route.params?.judgeKey;  // This should be outside any effect to ensure rules of hooks compliance
 
   useEffect(() => {
-    if (user) {
-      const judgeProfileRef = ref(db, `judges/${user.uid}/assignedEvents`);
-
-      const listener = onValue(judgeProfileRef, async (snapshot) => {
-        const assignedEventIds = snapshot.val() || [];
-        console.log('Assigned Event IDs:', assignedEventIds); // Log the assigned event IDs
-        const eventDetailsPromises = assignedEventIds.map((eventId) => get(ref(db, `events/${eventId}`)));
-
-        const eventSnapshots = await Promise.all(eventDetailsPromises);
-        const fetchedEvents = eventSnapshots.map((snap) => ({
-          id: snap.key,
-          ...snap.val(),
-        }));
-
-        console.log('Fetched Events:', fetchedEvents); // Log the fetched events
-        setAssignedEvents(fetchedEvents);
-      });
-
-      // Clean up listener on unmount
-      return () => {
-        off(judgeProfileRef, 'value', listener);
-      };
+    if (!user || !judgeKey) {
+      console.log('Waiting for user login and judgeKey...');
+      return;
     }
-  }, [user]); // Dependency array includes `user` to re-run the effect when the user changes
+  
+    console.log('User and judgeKey confirmed:', user.email, judgeKey);
+    const judgeProfileRef = ref(db, `judges/${judgeKey}/assignedEvents`);
+  
+    get(judgeProfileRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const assignedEventIdsObj = snapshot.val();
+        const assignedEventIds = Array.isArray(assignedEventIdsObj) ? assignedEventIdsObj : Object.values(assignedEventIdsObj);
+        const eventsFetchPromises = assignedEventIds.map(eventId => get(ref(db, `events/${eventId}`)));
+  
+        Promise.all(eventsFetchPromises).then(eventSnapshots => {
+          const events = eventSnapshots.map(snap => ({ ...snap.val(), id: snap.key }));
+          setAssignedEvents(events);
+        });
+      } else {
+        console.log('No assigned events data found for this judge');
+      }
+    });
+  }, [user, judgeKey]); // React when user or judgeKey changes
+  
+  
 
   const greetUser = () => {
     const hour = new Date().getHours();
@@ -46,14 +49,13 @@ const JudgeDashboardScreen = () => {
     <Card style={styles.card}>
       <Card.Content>
         <Title>{item.name}</Title>
-        {/* Add other details as needed */}
       </Card.Content>
     </Card>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.welcomeText}>{`${greetUser()} ${user.displayName || user.email}`}</Text>
+      <Text style={styles.welcomeText}>{`${greetUser()} ${user?.displayName || user?.email}`}</Text>
       <FlatList
         horizontal
         data={assignedEvents}
@@ -62,12 +64,11 @@ const JudgeDashboardScreen = () => {
         showsHorizontalScrollIndicator={false}
         style={styles.horizontalList}
       />
-      {/* Additional UI components can be added here */}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
     flex: 1,
     padding: CustomTheme.spacing(2),
@@ -80,13 +81,12 @@ const styles = StyleSheet.create({
   horizontalList: {
     flexGrow: 0,
   },
-  card: {
+  card: { 
     margin: CustomTheme.spacing(1),
     width: 250,
     borderRadius: 8,
     elevation: 3,
   },
-  // ... other styles
 });
 
 export default JudgeDashboardScreen;
