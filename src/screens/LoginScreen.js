@@ -17,28 +17,27 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      if (userCredential.user) {
-        console.log('User logged in:', userCredential.user.email);
+      const user = userCredential.user;
   
-        const db = getDatabase();
-        const judgeRef = ref(db, `judges/${userCredential.user.uid}`);
-        
-        get(judgeRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            console.log('Judge exists, navigating to dashboard.');
-            navigation.navigate('JudgeDashboardScreen', { judgeKey: userCredential.user.uid });
-          } else {
-            console.log('Judge does not exist, creating new judge.');
-            set(judgeRef, {
-              email: email,
-              role: 'judge',
-              uid: userCredential.user.uid
-            }).then(() => {
-              console.log('New judge created.');
-              navigation.navigate('JudgeDashboardScreen', { judgeKey: userCredential.user.uid });
-            });
-          }
-        });
+      if (user) {
+        const judgeKey = user.uid; // Use the UID from the authentication as the key for the judge's entry
+        const judgeRef = ref(getDatabase(), `judges/${judgeKey}`);
+  
+        // Check if the judge already exists in the database
+        const judgeSnapshot = await get(judgeRef);
+        if (!judgeSnapshot.exists()) {
+          console.log('Judge does not exist, creating new judge.');
+  
+          // Create a new judge entry in the database
+          await set(judgeRef, {
+            email: email,
+            role: 'judge',
+            uid: judgeKey,
+          });
+        }
+  
+        console.log('Judge exists or was created, navigating to dashboard with judgeKey:', judgeKey);
+        navigation.navigate('JudgeDashboardScreen', { judgeKey: judgeKey });
       } else {
         console.log('No user object found after login.');
       }
@@ -47,8 +46,6 @@ const LoginScreen = () => {
       Alert.alert('Login Error', error.message, [{ text: 'OK' }]);
     }
   };
-  
-  
   
   function navigateToDashboard(judgeKey) {
     Alert.alert('Login Successful', 'You are now logged in.', [{ text: 'OK' }]);
