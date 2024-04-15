@@ -17,43 +17,45 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('User logged in!');
-      
-      const db = getDatabase(); // Get the reference to your Firebase Realtime Database
-      const judgesRef = ref(db, 'judges'); // Define the judges' reference correctly
-
-      get(judgesRef).then((snapshot) => {
-        let judgeExists = false;
-        let judgeKey = null;
-        // Loop through judges to find a match
-        snapshot.forEach((childSnapshot) => {
-          if (childSnapshot.val().uid === userCredential.user.uid) {
-            judgeExists = true;
-            judgeKey = childSnapshot.key;
+      if (userCredential.user) {
+        console.log('User logged in:', userCredential.user.email);
+  
+        const db = getDatabase();
+        const judgeRef = ref(db, `judges/${userCredential.user.uid}`);
+        
+        get(judgeRef).then((snapshot) => {
+          if (snapshot.exists()) {
+            console.log('Judge exists, navigating to dashboard.');
+            navigation.navigate('JudgeDashboardScreen', { judgeKey: userCredential.user.uid });
+          } else {
+            console.log('Judge does not exist, creating new judge.');
+            set(judgeRef, {
+              email: email,
+              role: 'judge',
+              uid: userCredential.user.uid
+            }).then(() => {
+              console.log('New judge created.');
+              navigation.navigate('JudgeDashboardScreen', { judgeKey: userCredential.user.uid });
+            });
           }
         });
-
-        // If the judge does not exist, create a new entry
-        if (!judgeExists) {
-          judgeKey = push(judgesRef).key; // Get a key for a new judge entry
-          set(ref(db, `judges/${judgeKey}`), {
-            uid: userCredential.user.uid,
-            email: email,
-            role: 'judge'
-          });
-        }
-
-        // Use the judgeKey for any further operations as needed
-        console.log(`Judge key: ${judgeKey}`);
-      });
-
-      Alert.alert('Login Successful', 'You are now logged in.', [{ text: 'OK' }]);
-      //navigation.navigate('Admin Dashboard'); // Make sure this is the correct screen name
+      } else {
+        console.log('No user object found after login.');
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Login Error', error);
       Alert.alert('Login Error', error.message, [{ text: 'OK' }]);
     }
   };
+  
+  
+  
+  function navigateToDashboard(judgeKey) {
+    Alert.alert('Login Successful', 'You are now logged in.', [{ text: 'OK' }]);
+    navigation.navigate('JudgeDashboardScreen', { judgeKey: judgeKey });
+  }
+  
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
