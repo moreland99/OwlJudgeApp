@@ -5,16 +5,19 @@ import { getDatabase, ref, onValue, remove } from 'firebase/database';
 import EventAddForm from './EventAddScreen'; // This component is for adding new events
 import EventEditForm from './EventEditForm'; // Assuming this is your event edit form component
 
-// Utility functions to format dates and times
+// Utility functions to format dates and times safely
 const formatDate = (dateString) => {
+  if (!dateString) return 'No date provided';
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', { month: 'long', day: '2-digit', year: 'numeric' }).format(date);
+  return isNaN(date.getTime()) ? 'Invalid date' : new Intl.DateTimeFormat('en-US', { month: 'long', day: '2-digit', year: 'numeric' }).format(date);
 };
 
 const formatTime = (timeString) => {
+  if (!timeString) return 'No time provided';
   const time = new Date(timeString);
-  return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).format(time);
+  return isNaN(time.getTime()) ? 'Invalid time' : new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).format(time);
 };
+
 
 // Function to delete an event
 const deleteEvent = (eventId) => {
