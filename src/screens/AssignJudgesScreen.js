@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Card, Button } from 'react-native-paper';
 import { getDatabase, ref, onValue, set, get } from 'firebase/database';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 const AssignJudgesScreen = () => {
   const navigation = useNavigation();
@@ -18,9 +19,9 @@ const AssignJudgesScreen = () => {
 
   useEffect(() => {
     const db = getDatabase(app);
-    const eventsRef = ref(db, 'events/');
-    const judgesRef = ref(db, 'judges/');
 
+    // Fetch events
+    const eventsRef = ref(db, 'events/');
     onValue(eventsRef, snapshot => {
       const eventData = snapshot.val() || {};
       const eventsArray = Object.keys(eventData).map(key => ({
@@ -29,8 +30,12 @@ const AssignJudgesScreen = () => {
       }));
       setEvents(eventsArray);
       setFilteredEvents(eventsArray);
+    }, error => {
+      Alert.alert("Firebase Error", "Failed to fetch events: " + error.message);
     });
 
+    // Fetch judges
+    const judgesRef = ref(db, 'judges/');
     onValue(judgesRef, snapshot => {
       const judgeData = snapshot.val() || {};
       const judgesArray = Object.keys(judgeData).map(key => ({
@@ -39,6 +44,8 @@ const AssignJudgesScreen = () => {
       }));
       setJudges(judgesArray);
       setFilteredJudges(judgesArray);
+    }, error => {
+      Alert.alert("Firebase Error", "Failed to fetch judges: " + error.message);
     });
   }, []);
 
@@ -67,17 +74,14 @@ const AssignJudgesScreen = () => {
       Alert.alert("Selection Missing", "Please select both an event and a judge.");
       return;
     }
-  
+
     const db = getDatabase(app);
-    // Reference to the judge's assigned events
     const judgeAssignmentsRef = ref(db, `judges/${selectedJudge.id}/assignedEvents`);
-  
-    // Get the current list of assigned events, append the new one, and write it back
+
     get(judgeAssignmentsRef).then((snapshot) => {
       const currentAssignments = snapshot.val() || [];
       if (!currentAssignments.includes(selectedEvent.id)) {
         const updatedAssignments = [...currentAssignments, selectedEvent.id];
-  
         set(judgeAssignmentsRef, updatedAssignments)
           .then(() => Alert.alert("Assignment Complete", "Judge has been assigned to the event successfully."))
           .catch(error => Alert.alert("Assignment Failed", error.message));
@@ -86,11 +90,10 @@ const AssignJudgesScreen = () => {
       }
     });
   };
-  
 
   return (
     <View style={styles.container}>
-    <Button icon="arrow-left" mode="outlined" onPress={() => navigation.goBack()}>
+      <Button icon="arrow-left" mode="outlined" onPress={() => navigation.goBack()}>
         Go Back
       </Button>
       <TextInput
@@ -164,3 +167,4 @@ const styles = StyleSheet.create({
 });
 
 export default AssignJudgesScreen;
+

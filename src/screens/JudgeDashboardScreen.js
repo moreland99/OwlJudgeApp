@@ -2,16 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { Card, Title } from 'react-native-paper';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, set } from 'firebase/database';
+import LogoutButton from '../components/LogoutButton';
 import { useRoute } from '@react-navigation/native';
 import CustomTheme from '../../theme';
 
 const JudgeDashboardScreen = () => {
   const [assignedEvents, setAssignedEvents] = useState([]);
   const [user, setUser] = useState(null);
+  const [judgeKey, setJudgeKey] = useState(null);
   const db = getDatabase();
-  const route = useRoute();
-  const judgeKey = route.params?.judgeKey;  // This should be outside any effect to ensure rules of hooks compliance
+  const auth = getAuth();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (newUser) => {
+      setUser(newUser);
+      if (newUser) {
+        // Set judgeKey based on the user
+        setJudgeKey(newUser.uid);
+        console.log("Judge Key:", judgeKey);
+      } else {
+        setJudgeKey(null);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     if (!user || !judgeKey) {
@@ -24,8 +40,7 @@ const JudgeDashboardScreen = () => {
   
     get(judgeProfileRef).then((snapshot) => {
       if (snapshot.exists()) {
-        const assignedEventIdsObj = snapshot.val();
-        const assignedEventIds = Array.isArray(assignedEventIdsObj) ? assignedEventIdsObj : Object.values(assignedEventIdsObj);
+        const assignedEventIds = snapshot.val();
         const eventsFetchPromises = assignedEventIds.map(eventId => get(ref(db, `events/${eventId}`)));
   
         Promise.all(eventsFetchPromises).then(eventSnapshots => {
@@ -45,16 +60,17 @@ const JudgeDashboardScreen = () => {
     return hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
   };
 
-  const renderEventCard = ({ item }) => (
+  const renderEventCard = ({ item }) => ( 
     <Card style={styles.card}>
       <Card.Content>
         <Title>{item.name}</Title>
       </Card.Content>
-    </Card>
+    </Card> 
   );
 
   return (
     <View style={styles.container}>
+    <LogoutButton />
       <Text style={styles.welcomeText}>{`${greetUser()} ${user?.displayName || user?.email}`}</Text>
       <FlatList
         horizontal
