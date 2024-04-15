@@ -37,10 +37,17 @@ const EventAddScreen = ({ navigation }) => {
     };
   
     set(newEventRef, newEvent) // Use the set() method with the unique reference
-      .then(() => {
-        alert(`Event "${eventName}" added with ID ${newEventRef.key}!`);
-        navigation.goBack();
-      })
+    .then(() => {
+      alert(`Event "${eventName}" added with ID ${newEventRef.key}!`);
+      // Clear the form here
+      setEventName('');
+      setEventDetails('');
+      setStartDate(new Date());
+      setEndDate(new Date());
+      setStartTime(new Date());
+      setEndTime(new Date());
+      navigation.goBack(); // Optionally navigate back
+    })
       .catch((error) => {
         alert("Failed to add event: " + error.message);
       });
