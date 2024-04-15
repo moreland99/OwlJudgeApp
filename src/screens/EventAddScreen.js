@@ -9,6 +9,7 @@ import { app } from '../firebase/firebaseConfig';
 const EventAddScreen = ({ navigation }) => { 
   const theme = useTheme();
   const [eventName, setEventName] = useState('');
+  const [eventDetails, setEventDetails] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
@@ -26,6 +27,7 @@ const EventAddScreen = ({ navigation }) => {
     const newEvent = {
       id: newEventRef.key,
       name: eventName,
+      details: eventDetails,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       startTime: startTime.toISOString(),
@@ -57,7 +59,13 @@ const EventAddScreen = ({ navigation }) => {
             value={eventName}
             onChangeText={setEventName}
             style={styles.input}
-            right={<TextInput.Icon name="calendar" />}
+          />
+          <TextInput
+            mode="outlined"
+            label="Event Details"
+            value={eventDetails}
+            onChangeText={setEventDetails}
+            style={styles.input}
           />
           <Button icon="calendar" mode="outlined" onPress={() => setOpenStartDatePicker(true)} style={styles.button}>
             Pick Start Date
