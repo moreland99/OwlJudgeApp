@@ -1,103 +1,92 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import { Card, Paragraph, Title, useTheme } from 'react-native-paper';
-import { getDatabase, ref, onValue } from 'firebase/database';
-import { app } from '../firebase/firebaseConfig'; // Make sure your Firebase config is correctly imported
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { Card, Title } from 'react-native-paper';
+import { getAuth } from 'firebase/auth';
+import { getDatabase, ref, get, onValue, off } from 'firebase/database';
+import CustomTheme from '../../theme';
 
-const JudgeDashboardScreen = ({ navigation }) => {
-  const [events, setEvents] = useState([]);
-  const [markedDates, setMarkedDates] = useState({});
-  const theme = useTheme();
-  const [judgesList, setJudgesList] = useState([]);
-const [eventsList, setEventsList] = useState([]);
+const JudgeDashboardScreen = () => {
+  const [assignedEvents, setAssignedEvents] = useState([]);
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const db = getDatabase();
 
   useEffect(() => {
-    const db = getDatabase(app);
-    const eventsRef = ref(db, 'events');
+    if (user) {
+      const judgeProfileRef = ref(db, `judges/${user.uid}/assignedEvents`);
 
-    onValue(eventsRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedEvents = data ? Object.keys(data).map(key => ({
-        id: key,
-        ...data[key]
-      })) : [];
-      setEvents(loadedEvents);
+      const listener = onValue(judgeProfileRef, async (snapshot) => {
+        const assignedEventIds = snapshot.val() || [];
+        console.log('Assigned Event IDs:', assignedEventIds); // Log the assigned event IDs
+        const eventDetailsPromises = assignedEventIds.map((eventId) => get(ref(db, `events/${eventId}`)));
 
-      // Fetch judges
-  const judgesRef = ref(db, 'judges/');
-  onValue(judgesRef, (snapshot) => {
-    const judgesData = snapshot.val() || {};
-    const judgesArray = Object.keys(judgesData).map(key => ({
-      id: key,
-      ...judgesData[key]
-    }));
-    setJudgesList(judgesArray);
-  });
+        const eventSnapshots = await Promise.all(eventDetailsPromises);
+        const fetchedEvents = eventSnapshots.map((snap) => ({
+          id: snap.key,
+          ...snap.val(),
+        }));
 
-  // Fetch events
-  const eventsRef = ref(db, 'events/');
-  onValue(eventsRef, (snapshot) => {
-    const eventsData = snapshot.val() || {};
-    const eventsArray = Object.keys(eventsData).map(key => ({
-      id: key,
-      ...eventsData[key]
-    }));
-    setEventsList(eventsArray);
-  });
-
-      // Update calendar marked dates
-      const newMarkedDates = {};
-      loadedEvents.forEach(event => {
-        newMarkedDates[event.date] = { marked: true, dotColor: 'blue', activeOpacity: 0.5 };
+        console.log('Fetched Events:', fetchedEvents); // Log the fetched events
+        setAssignedEvents(fetchedEvents);
       });
-      setMarkedDates(newMarkedDates);
-    });
-  }, []);
 
-  const renderItem = ({ item }) => (
-    <Card onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.card}>
+      // Clean up listener on unmount
+      return () => {
+        off(judgeProfileRef, 'value', listener);
+      };
+    }
+  }, [user]); // Dependency array includes `user` to re-run the effect when the user changes
+
+  const greetUser = () => {
+    const hour = new Date().getHours();
+    return hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+  };
+
+  const renderEventCard = ({ item }) => (
+    <Card style={styles.card}>
       <Card.Content>
         <Title>{item.name}</Title>
-        <Paragraph>{item.date}</Paragraph>
+        {/* Add other details as needed */}
       </Card.Content>
     </Card>
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Judge Dashboard</Text>
-      <Calendar
-        markingType={'dot'}
-        markedDates={markedDates}
-      />
+    <View style={styles.container}>
+      <Text style={styles.welcomeText}>{`${greetUser()} ${user.displayName || user.email}`}</Text>
       <FlatList
-        data={events}
-        renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
-        style={styles.list}
+        horizontal
+        data={assignedEvents}
+        renderItem={renderEventCard}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        style={styles.horizontalList}
       />
-    </ScrollView>
+      {/* Additional UI components can be added here */}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: CustomTheme.spacing(2),
   },
-  title: {
-    fontSize: 20,
+  welcomeText: {
+    fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 20,
+    marginVertical: CustomTheme.spacing(2),
+  },
+  horizontalList: {
+    flexGrow: 0,
   },
   card: {
-    margin: 10,
-    padding: 10,
+    margin: CustomTheme.spacing(1),
+    width: 250,
+    borderRadius: 8,
+    elevation: 3,
   },
-  list: {
-    marginVertical: 20,
-  },
+  // ... other styles
 });
 
 export default JudgeDashboardScreen;

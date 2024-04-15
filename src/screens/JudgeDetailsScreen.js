@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, TextInput, Text, Menu, Provider, useTheme } from 'react-native-paper';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { Button, TextInput, Text, Provider } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getDatabase, ref, push } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
 const JudgeDetailsScreen = ({ navigation }) => {
-  const theme = useTheme(CustomTheme);
   const [judgeName, setJudgeName] = useState('');
   const [expertise, setExpertise] = useState('');
   const [email, setEmail] = useState('');
@@ -51,7 +49,6 @@ const JudgeDetailsScreen = ({ navigation }) => {
   };
 
   return (
-    <Provider theme={CustomTheme}>
       <ScrollView contentContainerStyle={styles.container}>
         <LogoComponent />
         <Text style={styles.title}>Add/Edit Judge Details</Text>
@@ -94,7 +91,6 @@ const JudgeDetailsScreen = ({ navigation }) => {
           Save Details
         </Button>
       </ScrollView>
-    </Provider>
   );
 };
 
