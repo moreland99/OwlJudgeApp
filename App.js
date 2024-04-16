@@ -30,6 +30,7 @@ import ScoringScreen from './src/screens/ScoringScreen';
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const EventStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const AdminStack = createNativeStackNavigator();
 
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -46,6 +47,17 @@ const EventStackNavigator = () => (
     <EventStack.Screen name="JudgeListScreen" component={JudgeListScreen} options={{ title: 'Judges' }} />
     <EventStack.Screen name="ScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
   </EventStack.Navigator>
+);
+
+const AdminStackNavigator = () => (
+  <AdminStack.Navigator initialRouteName="AdminDashboard">
+    <AdminStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+    <AdminStack.Screen name="EventDashboard" component={EventDashboardScreen} />
+    <AdminStack.Screen name="JudgeList" component={JudgeListScreen} />
+    <AdminStack.Screen name="ProjectSubmission" component={ProjectSubmissionScreen} />
+    <AdminStack.Screen name="ScoringFeedback" component={ScoringScreen} />
+    <AdminStack.Screen name="AssignJudges" component={AssignJudgesScreen} />
+  </AdminStack.Navigator>
 );
 
 const JudgeTabNavigator = ({ isAdmin}) => (
@@ -80,7 +92,7 @@ const JudgeTabNavigator = ({ isAdmin}) => (
 {isAdmin && (
   <Tab.Screen
     name="Admin"
-    component={AdminDashboardScreen}
+    component={AdminStackNavigator}
     options={{
       tabBarIcon: ({ focused, color, size }) => (
         <Icon

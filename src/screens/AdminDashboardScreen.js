@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { Button, Card, useTheme, Modal, Portal, List } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
 import { assignJudgeToEvent } from '../firebase/firebaseOperations';
 
 const AdminDashboardScreen = ({ navigation }) => {
@@ -61,11 +62,11 @@ const AdminDashboardScreen = ({ navigation }) => {
         <StatCard label="Total Judges" count={judgeCount} styles={styles} />
         </View>
         <View style={styles.quickLinksContainer}>
-          <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('Event Dashboard')} styles={styles} />
-          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('Judge List')} styles={styles} />
+          <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
+          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeListScreen')} styles={styles} />
           <QuickLinkButton title="View Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('Project Submission')} styles={styles} />
           <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
-          <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('Assign Judges')} styles={styles} />
+          <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
       </View>
       <Portal>
