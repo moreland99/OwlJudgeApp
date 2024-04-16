@@ -10,43 +10,49 @@ const EventDetailsScreen = ({ route, navigation }) => {
     const [projects, setProjects] = useState([]);
 
     useEffect(() => {
-        // Fetch event details
-        const eventRef = ref(getDatabase(app), `events/${eventId}`);
+        const db = getDatabase(app);
+        // Fetch the details of the event itself
+        const eventRef = ref(db, `events/${eventId}`);
         get(eventRef).then((eventSnapshot) => {
-            if (eventSnapshot.exists()) {
-                const eventData = eventSnapshot.val();
-                setEventDetails(eventData);
-    
-                // Now fetch the projects
-                const projectsRef = ref(getDatabase(app), 'projects');
-                get(projectsRef).then((projectsSnapshot) => {
-                    if (projectsSnapshot.exists()) {
-                        const allProjects = projectsSnapshot.val();
-    
-                        // Log all projects to debug
-                        console.log('All Projects:', allProjects);
-    
-                        // Filter projects that are associated with the event
-                        const assignedProjects = Object.keys(allProjects)
-                            .filter(key => allProjects[key].event === eventId)
-                            .map(key => ({ ...allProjects[key], id: key }));
-    
-                        // Log the assigned projects for debugging
-                        console.log('Assigned Projects:', assignedProjects);
-    
-                        setProjects(assignedProjects);
-                    } else {
-                        console.log('No projects found in the database.');
-                    }
-                });
-            } else {
-                console.log('Event data not available');
-                setEventDetails({});
-            }
+          if (eventSnapshot.exists()) {
+            setEventDetails(eventSnapshot.val());
+          } else {
+            console.log('Event data not available');
+            setEventDetails({});
+          }
         }).catch((error) => {
-            console.error('Error fetching event data:', error);
+          console.error('Error fetching event details:', error);
         });
-    }, [eventId]);
+      
+        // Fetch projects linked to this event
+        const projectsRef = ref(db, 'projects');
+        get(projectsRef).then((projectsSnapshot) => {
+          if (projectsSnapshot.exists()) {
+            const allProjects = projectsSnapshot.val();
+            const assignedProjects = [];
+      
+            for (const projectId in allProjects) {
+              for (const projectDataId in allProjects[projectId]) {
+                const projectData = allProjects[projectId][projectDataId];
+                if (projectData.event === eventId) {
+                  assignedProjects.push({
+                    id: projectId,
+                    ...projectData
+                  });
+                }
+              }
+            }
+      
+            console.log('Assigned Projects:', assignedProjects); // For debugging
+            setProjects(assignedProjects);
+          } else {
+            console.log('No projects found');
+          }
+        }).catch((error) => {
+          console.error('Error fetching projects:', error);
+        });
+      }, [eventId]);
+      
     
     
 
