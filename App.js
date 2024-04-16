@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './localeConfig';
 import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PaperProvider, ActivityIndicator } from 'react-native-paper';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -23,11 +22,12 @@ import AssignJudgesScreen from './src/screens/AssignJudgesScreen';
 // Screens specific to Judge
 import JudgeDashboardScreen from './src/screens/JudgeDashboardScreen';
 import EventListScreen from './src/screens/EventListScreen';
+import EventDetailsScreen from './src/screens/EventDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
 
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
-const Drawer = createDrawerNavigator();
+const EventStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const AuthStack = () => (
@@ -37,27 +37,12 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// Stack Navigator for Event Dashboard and Add Event Screen
-const EventStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen name="EventDashboard" component={EventDashboardScreen} options={{ headerShown: true }} />
-    <Stack.Screen
-      name="AddEvent"
-      component={EventAddScreen}
-      options={{
-        presentation: 'modal',
-        gestureEnabled: true, // Explicitly enable gestures
-      }}
-    />
-  </Stack.Navigator>
-);
-
-// Stack Navigator for Admin Dashboard and Assign Judges
-const AdminNavigator = () => (
-  <Stack.Navigator>
-    <Stack.Screen name="Admin Dashboard" component={AdminDashboardScreen} />
-    <Stack.Screen name="Assign Judges" component={AssignJudgesScreen} options={{ headerShown: false }} />
-  </Stack.Navigator>
+// Event Stack for nested navigation within the Events tab
+const EventStackNavigator = () => (
+  <EventStack.Navigator>
+    <EventStack.Screen name="EventList" component={EventListScreen} options={{ title: 'Events' }} />
+    <EventStack.Screen name="EventDetails" component={EventDetailsScreen} options={{ title: 'Event Details' }} />
+  </EventStack.Navigator>
 );
 
 const JudgeTabNavigator = () => (
@@ -84,7 +69,7 @@ const JudgeTabNavigator = () => (
     })} 
   >
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
-    <Tab.Screen name="Events" component={AssignJudgesScreen} /> 
+    <Tab.Screen name="Events" component={EventStackNavigator} /> 
     <Tab.Screen name="Projects" component={ProjectSubmissionScreen} />
     <Tab.Screen name="Scoring" component={ScoringScreen} />
   </Tab.Navigator>
@@ -115,7 +100,6 @@ function App() {
       <StatusBar backgroundColor={CustomTheme.colors.primary} barStyle="light-content" />
       <NavigationContainer>
         {isLoggedIn ? (
-          // Replace Drawer.Navigator with JudgeTabNavigator for judges
           <JudgeTabNavigator />
         ) : (
           <AuthStack />
