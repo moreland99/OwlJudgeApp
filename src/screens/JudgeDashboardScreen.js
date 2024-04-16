@@ -3,11 +3,13 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react
 import { Card, Title, Paragraph, Button } from 'react-native-paper';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getDatabase, ref, get } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
 import { format, parseISO, isAfter } from 'date-fns'; // Import isAfter for date comparison
 import LogoutButton from '../components/LogoutButton';
 import CustomTheme from '../../theme';
 
 const JudgeDashboardScreen = () => {
+  const navigation = useNavigation();
   const [assignedEvents, setAssignedEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [user, setUser] = useState(null);
@@ -44,7 +46,6 @@ const JudgeDashboardScreen = () => {
   const handleEventSelect = (event) => {
     setCurrentEvent(event);
     setModalVisible(true);
-    navigation.navigate('JudgeListScreen', { eventId: event.id });
   };
 
   const handleCloseModal = () => {
