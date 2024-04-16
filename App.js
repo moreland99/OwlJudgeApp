@@ -14,7 +14,7 @@ import EventDashboardScreen from './src/screens/EventDashboardScreen';
 import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
-import CreateAccount from './src/screens/CreateAccount';
+import CreateAccount from './src/screens/CreateAccount'; 
 import EventAddScreen from './src/screens/EventAddScreen';
 import JudgeListScreen from './src/screens/JudgeListScreen';
 import LogoutButton from './src/components/LogoutButton';
