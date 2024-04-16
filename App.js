@@ -42,6 +42,7 @@ const EventStackNavigator = () => (
   <EventStack.Navigator>
     <EventStack.Screen name="EventList" component={EventListScreen} options={{ title: 'Assigned Events' }} />
     <EventStack.Screen name="EventDetails" component={EventDetailsScreen} options={{ title: 'Event Details' }} />
+    <EventStack.Screen name="ScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
   </EventStack.Navigator>
 );
 
@@ -71,7 +72,7 @@ const JudgeTabNavigator = () => (
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
     <Tab.Screen name="Events" component={EventStackNavigator} /> 
     <Tab.Screen name="Projects" component={ProjectSubmissionScreen} />
-    <Tab.Screen name="Scoring" component={ScoringScreen} />
+    
   </Tab.Navigator>
 );
 

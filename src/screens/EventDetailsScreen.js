@@ -59,7 +59,7 @@ const EventDetailsScreen = ({ route, navigation }) => {
         <List.Item
             title={item.title}
             description={item.summary}
-            onPress={() => console.log("Project selected", item.id)}
+            onPress={() => navigation.navigate('ScoringScreen', { projectId: item.id })}
             left={props => <List.Icon {...props} icon="folder" />}
         />
     );
