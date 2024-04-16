@@ -1,58 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, Card, Title, Paragraph, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
+import { getDatabase, ref, get, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
+import CustomTheme from '../../theme';
 
 const EventListScreen = ({ navigation }) => {
   const [events, setEvents] = useState([]);
-  const theme = useTheme();
+  const theme = CustomTheme;
+  const auth = getAuth();
 
   useEffect(() => {
-    const database = getDatabase(app);
-    const eventsRef = ref(database, 'events');
-
-    // Listen for database changes, updating state accordingly
-    const unsubscribe = onValue(eventsRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedEvents = data ? Object.keys(data).map(key => ({
-        id: key,
-        ...data[key]
-      })) : [];
-      setEvents(loadedEvents);
-    }, {
-      onlyOnce: true // If you want to fetch the data only once; remove this option if you want real-time updates
-    });
-
-    // Cleanup subscription
-    return () => unsubscribe();
+    const user = auth.currentUser;
+    if (user) {
+      const judgeProfileRef = ref(getDatabase(app), `judges/${user.uid}/assignedEvents`);
+      get(judgeProfileRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const assignedEventIds = snapshot.val();
+          const eventsFetchPromises = assignedEventIds.map(eventId =>
+            get(ref(getDatabase(app), `events/${eventId}`))
+          );
+          Promise.all(eventsFetchPromises).then(eventSnapshots => {
+            const assignedEvents = eventSnapshots.map(snap => ({ ...snap.val(), id: snap.key }));
+            setEvents(assignedEvents);
+          });
+        }
+      });
+    }
   }, []);
 
   const renderItem = ({ item }) => (
-    <Card style={[styles.item, { backgroundColor: theme.colors.surface }]}>
-      <Card.Content>
-        <Title style={{ color: theme.colors.onSurface }}>{item.name}</Title>
-        <Paragraph>{item.date}</Paragraph>
-      </Card.Content>
-    </Card>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+    >
+      <Card style={[styles.item, { backgroundColor: theme.colors.surface }]}>
+        <Card.Content>
+          <Title style={{ color: theme.colors.onSurface }}>{item.name}</Title>
+          <Paragraph>{item.date}</Paragraph>
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <LogoComponent />
+    <LogoComponent />
       <FlatList
         data={events}
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
-      <Button
-        mode="contained"
-        onPress={() => navigation.navigate('AddEvent')}
-        style={{ margin: 10 }}
-      >
-        Add New Event
-      </Button>
     </View>
   );
 };

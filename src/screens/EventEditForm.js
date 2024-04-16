@@ -1,79 +1,55 @@
+// EventEditForm.js
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, TextInput, Text, useTheme, Card, IconButton } from 'react-native-paper';
+import { Button, TextInput, Text, useTheme, Card } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
-import LogoComponent from '../components/LogoComponent';
-import { getDatabase, ref, push, set } from 'firebase/database';
-import { app } from '../firebase/firebaseConfig';
+import LogoComponent from '../components/LogoComponent'; // Adjust import path as necessary
+import { getDatabase, ref, update } from 'firebase/database';
 
-const EventAddScreen = ({ navigation }) => { 
+const EventEditForm = ({ event, onClose }) => {
   const theme = useTheme();
-  const [eventName, setEventName] = useState('');
-  const [eventDetails, setEventDetails] = useState('');
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const [eventName, setEventName] = useState(event.name);
+  const [startDate, setStartDate] = useState(new Date(event.startDate));
+  const [endDate, setEndDate] = useState(new Date(event.endDate));
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
   const [openEndDatePicker, setOpenEndDatePicker] = useState(false);
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
+  const [startTime, setStartTime] = useState(new Date(event.startTime));
+  const [endTime, setEndTime] = useState(new Date(event.endTime));
   const [openTimePickerStart, setOpenTimePickerStart] = useState(false);
   const [openTimePickerEnd, setOpenTimePickerEnd] = useState(false);
 
-  const handleAddEvent = () => {
-    const database = getDatabase(app);
-    const eventsRef = ref(database, 'events');
-    const newEventRef = push(eventsRef); // Firebase generates a unique key
-  
-    const newEvent = {
-      id: newEventRef.key,
+  const handleEditEvent = () => {
+    const db = getDatabase();
+    const eventRef = ref(db, `events/${event.id}`);
+    update(eventRef, {
       name: eventName,
-      details: eventDetails,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
-      judges: {}, // Placeholder for judge IDs
-      projects: {} // Placeholder for project IDs
-    };
-  
-    set(newEventRef, newEvent) // Use the set() method with the unique reference
-    .then(() => {
-      alert(`Event "${eventName}" added with ID ${newEventRef.key}!`);
-      // Clear the form here
-      setEventName('');
-      setEventDetails('');
-      setStartDate(new Date());
-      setEndDate(new Date());
-      setStartTime(new Date());
-      setEndTime(new Date());
-      navigation.goBack(); // Optionally navigate back
-    })
-      .catch((error) => {
-        alert("Failed to add event: " + error.message);
-      });
+    }).then(() => {
+      alert(`Event "${eventName}" updated!`);
+      onClose();
+    }).catch((error) => {
+      alert("Failed to update event: " + error.message);
+    });
   };
-  
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
       <LogoComponent />
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={{ color: theme.colors.text, marginBottom: 20 }}>Add New Event</Text>
+          <Text style={{ color: theme.colors.text, marginBottom: 20 }}>Edit Event</Text>
           <TextInput
             mode="outlined"
             label="Event Name"
             value={eventName}
             onChangeText={setEventName}
             style={styles.input}
+            right={<TextInput.Icon name="calendar" />}
           />
-          <TextInput
-            mode="outlined"
-            label="Event Details"
-            value={eventDetails}
-            onChangeText={setEventDetails}
-            style={styles.input}
-          />
+          {/* Start Date Picker */}
           <Button icon="calendar" mode="outlined" onPress={() => setOpenStartDatePicker(true)} style={styles.button}>
             Pick Start Date
           </Button>
@@ -88,6 +64,7 @@ const EventAddScreen = ({ navigation }) => {
               setStartDate(params.date);
             }}
           />
+          {/* End Date Picker */}
           <Button icon="calendar" mode="outlined" onPress={() => setOpenEndDatePicker(true)} style={styles.button}>
             Pick End Date
           </Button>
@@ -102,6 +79,7 @@ const EventAddScreen = ({ navigation }) => {
               setEndDate(params.date);
             }}
           />
+          {/* Start Time Picker */}
           <Button icon="clock-outline" mode="outlined" onPress={() => setOpenTimePickerStart(true)} style={styles.button}>
             Pick Start Time
           </Button>
@@ -116,6 +94,7 @@ const EventAddScreen = ({ navigation }) => {
             hours={startTime.getHours()} // default: current hours
             minutes={startTime.getMinutes()} // default: current minutes
           />
+          {/* End Time Picker */}
           <Button icon="clock-outline" mode="outlined" onPress={() => setOpenTimePickerEnd(true)} style={styles.button}>
             Pick End Time
           </Button>
@@ -132,10 +111,10 @@ const EventAddScreen = ({ navigation }) => {
           />
           <Button 
             mode="contained" 
-            onPress={handleAddEvent}
+            onPress={handleEditEvent}
             style={styles.button}
           >
-            Add Event
+            Update Event
           </Button>
         </Card.Content>
       </Card>
@@ -152,7 +131,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    padding:    8,
+    padding: 8,
     marginVertical: 8,
   },
   input: {
@@ -164,4 +143,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EventAddScreen;
+export default EventEditForm;
+

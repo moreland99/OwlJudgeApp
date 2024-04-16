@@ -1,115 +1,172 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Button, Card, useTheme } from 'react-native-paper';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { Button, Card, useTheme, Modal, Portal, List } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import { assignJudgeToEvent } from '../firebase/firebaseOperations';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [eventCount, setEventCount] = useState(0);
   const [projectCount, setProjectCount] = useState(0);
   const [judgeCount, setJudgeCount] = useState(0);
-  const [recentScores, setRecentScores] = useState([]);
-  const theme = useTheme(); // Using theme for consistent styling
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [eventsList, setEventsList] = useState([]);
+  const [judgesList, setJudgesList] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [selectedJudgeId, setSelectedJudgeId] = useState(null);
+  
+  const theme = useTheme();
+  const styles = getDynamicStyles(theme);
 
   useEffect(() => {
     const db = getDatabase();
-    const fetchData = async () => {
-      const eventRef = ref(db, 'events/');
-      onValue(eventRef, (snapshot) => {
-        const data = snapshot.val();
-        setEventCount(Object.keys(data).length);
-      });
+    const eventListRef = ref(db, 'events/');
+    const judgeListRef = ref(db, 'judges/');
 
-      const projectRef = ref(db, 'projects/');
-      onValue(projectRef, (snapshot) => {
-        const data = snapshot.val();
-        setProjectCount(Object.keys(data).length);
+    onValue(eventListRef, (snapshot) => {
+      const events = [];
+      snapshot.forEach((childSnapshot) => {
+        events.push({
+          id: childSnapshot.key,
+          ...childSnapshot.val(),
+        });
       });
+      setEventsList(events);
+      setEventCount(events.length);
+    });
 
-      const judgeRef = ref(db, 'judges/');
-      onValue(judgeRef, (snapshot) => {
-        const data = snapshot.val();
-        setJudgeCount(Object.keys(data).length);
+    onValue(judgeListRef, (snapshot) => {
+      const judges = [];
+      snapshot.forEach((childSnapshot) => {
+        judges.push({
+          id: childSnapshot.key,
+          ...childSnapshot.val(),
+        });
       });
-
-      const scoresRef = ref(db, 'scores/');
-      onValue(scoresRef, (snapshot) => {
-        const data = snapshot.val();
-        setRecentScores(Object.values(data)); // Assuming 'data' is an object where each key is a score entry
-      });
-    };
-
-    fetchData();
+      setJudgesList(judges);
+      setJudgeCount(judges.length);
+    });
   }, []);
 
+  const openModal = () => setModalVisible(true);
+  const closeModal = () => setModalVisible(false);
+  const handleSelectEvent = (eventId) => setSelectedEventId(eventId);
+  const handleSelectJudge = (judgeId) => setSelectedJudgeId(judgeId);
+
   return (
-    <ScrollView style={styles.container}>
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-      <Card.Content>
-        <Text style={styles.title}>Admin Dashboard</Text>
-        {/* Stats Display */}
-        <Text style={styles.statText}>Total Events: {eventCount}</Text>
-        <Text style={styles.statText}>Total Projects: {projectCount}</Text>
-        <Text style={styles.statText}>Total Judges: {judgeCount}</Text>
-        {/* Quick Link Buttons */}
-        <Button 
-          icon="calendar-check" 
-          mode="contained" 
-          onPress={() => navigation.navigate('Event List')}
-          style={styles.button}
-          color={theme.colors.primary}>View Events</Button>
-        <Button 
-          icon="account-group" 
-          mode="contained" 
-          onPress={() => navigation.navigate('Judge Details')}
-          style={styles.button}
-          color={theme.colors.accent}>View Judges</Button>
-        <Button 
-          icon="book-open-page-variant" 
-          mode="contained" 
-          onPress={() => navigation.navigate('Project Submission')}
-          style={styles.button}
-          color={theme.colors.primary}>View Projects</Button>
-        <Button 
-          icon="scoreboard" 
-          mode="contained" 
-          onPress={() => navigation.navigate('Scoring & Feedback')}
-          style={styles.button}
-          color={theme.colors.accent}>View Scores</Button>
-        {/* Add more quick links as needed */}
-      </Card.Content>
-    </Card>
-  </ScrollView>
+    <ScrollView style={styles.fullscreen}>
+      <View style={styles.container}>
+      <View style={styles.statsContainer}>
+        <StatCard label="Total Events" count={eventCount} styles={styles} />
+        <StatCard label="Total Projects" count={projectCount} styles={styles} />
+        <StatCard label="Total Judges" count={judgeCount} styles={styles} />
+        </View>
+        <View style={styles.quickLinksContainer}>
+          <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('Event Dashboard')} styles={styles} />
+          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('Judge List')} styles={styles} />
+          <QuickLinkButton title="View Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('Project Submission')} styles={styles} />
+          <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
+          <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('Assign Judges')} styles={styles} />
+        </View>
+      </View>
+      <Portal>
+        <Modal visible={isModalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
+          <Card>
+            <Card.Title title="Assign Judge to Event" />
+            <Card.Content>
+              <List.Accordion title="Select Event" expanded={selectedEventId !== null}>
+                {eventsList.map(event => (
+                  <List.Item key={event.id} title={event.name} onPress={() => handleSelectEvent(event.id)} />
+                ))}
+              </List.Accordion>
+              <List.Accordion title="Select Judge" expanded={selectedJudgeId !== null}>
+                {judgesList.map(judge => (
+                  <List.Item key={judge.id} title={judge.email} onPress={() => handleSelectJudge(judge.id)} />
+                ))}
+              </List.Accordion>
+            </Card.Content>
+            <Card.Actions>
+            </Card.Actions>
+          </Card>
+        </Modal>
+      </Portal>
+    </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    card: {
-      margin: 10,
-      padding: 20,
-      borderRadius: 8, // Rounded corners for the card
-    },
-    title: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      marginBottom: 16,
-      textAlign: 'center',
-      color: '#344955', // Adjust color as per theme
-    },
-    statText: {
-      fontSize: 16,
-      marginBottom: 10,
-      color: '#232F34', // Adjust color as per theme
-    },
-    button: {
-      marginTop: 10,
-      paddingVertical: 5,
-      marginHorizontal: 10,
-      borderRadius: 20, // Rounded corners for buttons
-    },
-    // You can add or adjust styles as needed
-  });
+const getDynamicStyles = (theme) => StyleSheet.create({
+  fullscreen: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  container: {
+    flex: 1, // Ensure the container takes full available space
+    padding: 10,
+  },
+  quickLinksContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around', // Changed to 'space-around' for better spacing
+  },
+  quickLinkCard: {
+    width: '48%', // Slightly less than half to fit two items per row
+    margin: 2, // Uniform margin for vertical and horizontal
+    padding: 10,
+    alignItems: 'center', // Center items inside the card
+  },
+  card: {
+    borderRadius: 15,
+    flex: 1, // Ensures the card stretches to fill the space
+    justifyContent: 'center', // Centers content vertically within the card
+  },
+  buttonIcon: {
+    justifyContent: 'center',
+    fontSize: 16, // Adjusted for better text visibility
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    // other styles like padding or margin if necessary
+  },
   
-  export default AdminDashboardScreen;
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statLabel: {
+    fontSize: 16,
+    color: theme.colors.onSurface,
+  },
+  statCount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    margin: 20,
+  },
+});
+
+
+const StatCard = ({ label, count, styles }) => (
+  <View style={styles.statCard}>
+    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={styles.statCount}>{count}</Text>
+  </View>
+);
+
+const QuickLinkButton = ({ title, iconName, onPress, styles }) => (
+  <TouchableOpacity style={styles.quickLinkCard} onPress={onPress}>
+    <Card style={styles.card}>
+      <Card.Content>
+        <Button icon={iconName} labelStyle={{ fontSize: styles.buttonIcon.fontSize }} numberOfLines={3} style={styles.buttonIcon}>
+          {title}
+        </Button>
+      </Card.Content>
+    </Card>
+  </TouchableOpacity>
+);
+
+export default AdminDashboardScreen;

@@ -1,58 +1,86 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
-import { Button, TextInput, Text, Menu, Divider, useTheme } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { Button, TextInput, Text, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-import { getDatabase, ref, push } from 'firebase/database';
+import { getDatabase, ref, push, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 
 const ProjectSubmissionScreen = ({ navigation }) => {
   const theme = useTheme();
-  const [projectNumber, setProjectNumber] = useState('');
   const [title, setTitle] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState('');
-  const [sponsoringCompany, setSponsoringCompany] = useState('');
+  const [summary, setSummary] = useState('');
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState('');
+
+
+  useEffect(() => {
+    const database = getDatabase(app);
+    const eventsRef = ref(database, 'events');
+
+    const unsubscribe = onValue(eventsRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedEvents = data ? Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      })) : [];
+      setEvents(loadedEvents);
+    }, {
+      onlyOnce: true
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSubmit = () => {
     const database = getDatabase(app);
     const projectsRef = ref(database, 'projects');
-    const newProject = { projectNumber, title, selectedCategory, selectedTopic, sponsoringCompany };
+    const newProjectRef = push(projectsRef);
 
-    push(projectsRef, newProject).then(() => {
-      alert('Project submitted successfully!');
-      navigation.goBack();
-    }).catch((error) => {
-      alert("Failed to submit project: " + error.message);
-    });
+    const newProject = {
+      id: newProjectRef.key,
+      title,
+      summary,
+      event: selectedEvent
+    };
+
+    push(newProjectRef, newProject)
+      .then(() => {
+        alert('Project submitted successfully with ID ' + newProjectRef.key + '!');
+        navigation.goBack();
+      })
+      .catch((error) => {
+        alert("Failed to submit project: " + error.message);
+      });
   };
 
   return (
     <ScrollView contentContainerStyle={[styles.container, {backgroundColor: theme.colors.background}]}>
       <LogoComponent />
       <Text style={[styles.title, {color: theme.colors.text}]}>Submit Your Project</Text>
+      <Picker
+        selectedValue={selectedEvent}
+        style={styles.picker}
+        onValueChange={(itemValue, itemIndex) => setSelectedEvent(itemValue)}
+      >
+        {events.map((event) => (
+          <Picker.Item key={event.id} label={event.name} value={event.id} />
+        ))}
+      </Picker>
       <TextInput
         mode="outlined"
-        label="Project Number"
-        value={projectNumber}
-        onChangeText={setProjectNumber}
-        style={styles.input}
-        theme={{ colors: { primary: theme.colors.primary }}}
-      />
-      <TextInput
-        mode="outlined"
-        label="Title"
+        label="Project Title"
         value={title}
         onChangeText={setTitle}
         style={styles.input}
         theme={{ colors: { primary: theme.colors.primary }}}
       />
-      {/* Implement Category and Topic selection UI */}
       <TextInput
         mode="outlined"
-        label="Sponsoring Company"
-        value={sponsoringCompany}
-        onChangeText={setSponsoringCompany}
-        style={styles.input}
+        label="Project Summary"
+        value={summary}
+        onChangeText={setSummary}
+        style={styles.inputLarge}
         theme={{ colors: { primary: theme.colors.primary }}}
       />
       <Button 
@@ -70,20 +98,35 @@ const ProjectSubmissionScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
+    //justifyContent: 'center',
     padding: 20,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
+  },
+  picker: {
+    marginBottom: 20,
   },
   input: {
     marginBottom: 10,
   },
+  inputLarge: {
+    height: 100, // Adjust the height for a larger input area
+  },
   button: {
-    marginTop: 10,
+    marginTop: 20,
   },
 });
 
+
 export default ProjectSubmissionScreen;
+
+
 
