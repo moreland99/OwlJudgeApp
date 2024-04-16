@@ -60,7 +60,7 @@ const EventDetailsScreen = ({ route, navigation }) => {
             title={item.title}
             description={item.summary}
             onPress={() => navigation.navigate('ScoringScreen', { projectId: item.id })}
-            left={props => <List.Icon {...props} icon="folder" />}
+            left={props => <List.Icon {...props} icon="star" />}
         />
     );
 

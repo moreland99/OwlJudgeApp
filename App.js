@@ -6,7 +6,8 @@ import { PaperProvider, ActivityIndicator } from 'react-native-paper';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon } from 'react-native-elements';
 import CustomTheme from './theme';
-import { auth } from './src/firebase/firebaseConfig';
+import { auth, database } from './src/firebase/firebaseConfig';
+import { ref, get } from 'firebase/database';
 import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 
 // Import Screens
@@ -42,11 +43,12 @@ const EventStackNavigator = () => (
   <EventStack.Navigator>
     <EventStack.Screen name="EventList" component={EventListScreen} options={{ title: 'Assigned Events' }} />
     <EventStack.Screen name="EventDetails" component={EventDetailsScreen} options={{ title: 'Event Details' }} />
+    <EventStack.Screen name="JudgeListScreen" component={JudgeListScreen} options={{ title: 'Judges' }} />
     <EventStack.Screen name="ScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
   </EventStack.Navigator>
 );
 
-const JudgeTabNavigator = () => (
+const JudgeTabNavigator = ({ isAdmin}) => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
@@ -60,6 +62,8 @@ const JudgeTabNavigator = () => (
           iconName = focused ? 'briefcase' : 'briefcase-outline';
         } else if (route.name === 'Scoring') {
           iconName = focused ? 'pencil' : 'pencil-outline';
+        } else if (route.name === 'Admin') {
+          iconName = focused ? 'shield' : 'shield-outline';
         }
 
         // You can return any component that you like here!
@@ -72,22 +76,54 @@ const JudgeTabNavigator = () => (
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
     <Tab.Screen name="Events" component={EventStackNavigator} /> 
     <Tab.Screen name="Projects" component={ProjectSubmissionScreen} />
-    
+     {/* Conditionally render the Admin tab if isAdmin is true */}
+{isAdmin && (
+  <Tab.Screen
+    name="Admin"
+    component={AdminDashboardScreen}
+    options={{
+      tabBarIcon: ({ focused, color, size }) => (
+        <Icon
+          name={focused ? 'shield' : 'shield-outline'}
+          size={size}
+          color={color}
+          type="ionicon"
+        />
+      ),
+    }}
+  />
+)}
+
   </Tab.Navigator>
 );
 
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
+      // Check if the logged-in user is an admin
+      if (user) {
+        const adminRef = ref(database, `admins/${user.uid}`);
+        get(adminRef).then((snapshot) => {
+          const isAdminValue = !!snapshot.val();
+          setIsAdmin(isAdminValue);
+        }).catch((error) => {
+          console.error("Error fetching admin status:", error);
+        });
+      } else {
+        setIsAdmin(false);
+      }
     });
-
-    return unsubscribe;
+  
+    return () => unsubscribe();
   }, []);
-
+  
+  
+ 
   if (isLoggedIn === null) {
     return (
       <SafeAreaView style={styles.container}>
@@ -101,7 +137,7 @@ function App() {
       <StatusBar backgroundColor={CustomTheme.colors.primary} barStyle="light-content" />
       <NavigationContainer>
         {isLoggedIn ? (
-          <JudgeTabNavigator />
+          <JudgeTabNavigator isAdmin={isAdmin}/>
         ) : (
           <AuthStack />
         )}
