@@ -13,6 +13,7 @@ const ScoringScreen = ({ navigation }) => {
     // Placeholder for further processing or backend integration
     navigation.goBack();
   };
+  
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -20,13 +21,14 @@ const ScoringScreen = ({ navigation }) => {
       <Card style={styles.card}>
         <Card.Content>
           <Text style={[styles.text, { color: theme.colors.text }]}>Score Project</Text>
+
           <TextInput
             mode="outlined"
-            label="Score"
+            label="Score (0-100)"
+            keyboardType="numeric"
             value={score}
-            onChangeText={setScore}
+            onChangeText={text => setScore(text.replace(/[^0-9]/g, ''))} // This ensures only numbers are entered
             style={styles.input}
-            right={<TextInput.Icon name="star-outline" />}
           />
           <TextInput
             mode="outlined"

@@ -44,6 +44,7 @@ const JudgeDashboardScreen = () => {
   const handleEventSelect = (event) => {
     setCurrentEvent(event);
     setModalVisible(true);
+    navigation.navigate('JudgeListScreen', { eventId: event.id });
   };
 
   const handleCloseModal = () => {

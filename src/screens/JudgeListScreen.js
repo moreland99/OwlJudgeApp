@@ -2,29 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { View, FlatList, Alert, StyleSheet } from 'react-native';
 import { Button, Card, Title, Paragraph, TextInput, useTheme, Searchbar, Modal, Portal, Provider } from 'react-native-paper';
 import { getDatabase, ref, onValue, remove, update } from 'firebase/database';
+import CustomTheme from '../../theme';
 import { app } from '../firebase/firebaseConfig';
 
 const JudgeListScreen = ({ navigation }) => {
   const [judges, setJudges] = useState([]);
   const [filteredJudges, setFilteredJudges] = useState([]);
-  const theme = useTheme();
+  const theme = CustomTheme;
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentJudge, setCurrentJudge] = useState(null);
 
   useEffect(() => {
-    const db = getDatabase(app);
-    const judgeRef = ref(db, 'judges/');
-
-    const unsubscribe = onValue(judgeRef, (snapshot) => {
-      const data = snapshot.val();
-      const judgeList = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
-      setJudges(judgeList);
-      setFilteredJudges(judgeList);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    if (route.params?.eventId) {
+      // Fetch projects for the given event ID
+      const eventProjectsRef = ref(db, `events/${route.params.eventId}/projects`);
+      get(eventProjectsRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const projects = Object.values(snapshot.val());
+          setProjects(projects);
+        }
+      });
+    }
+  }, [route.params?.eventId]);  
 
   const onChangeSearch = query => {
     setSearchQuery(query);
@@ -149,34 +149,32 @@ const JudgeListScreen = ({ navigation }) => {
   );
 };
 
-function getStyles(theme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    card: {
-      margin: 8,
-      padding: 8,
-      backgroundColor: theme.colors.surface,
-    },
-    searchbar: {
-      margin: 8,
-      borderRadius: 2,
-      elevation: 1,
-      backgroundColor: theme.colors.surface,
-    },
-    modalContainer: {
-      backgroundColor: 'white',
-      padding: 20,
-      marginLeft: 20,
-      marginRight: 20,
-    },
-    input: {
-      backgroundColor: theme.colors.surface,
-      marginBottom: 10,
-    }
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: CustomTheme.colors.background, // Assuming CustomTheme has a 'colors' object
+  },
+  card: {
+    margin: 8,
+    padding: 8,
+    backgroundColor: CustomTheme.colors.surface,
+  },
+  searchbar: {
+    margin: 8,
+    borderRadius: 2,
+    elevation: 1,
+    backgroundColor: CustomTheme.colors.surface,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    marginLeft: 20,
+    marginRight: 20,
+  },
+  input: {
+    backgroundColor: CustomTheme.colors.surface,
+    marginBottom: 10,
+  }
+});
 
 export default JudgeListScreen;
