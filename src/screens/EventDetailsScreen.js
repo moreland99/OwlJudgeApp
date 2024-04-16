@@ -43,7 +43,6 @@ const EventDetailsScreen = ({ route, navigation }) => {
               }
             }
       
-            console.log('Assigned Projects:', assignedProjects); // For debugging
             setProjects(assignedProjects);
           } else {
             console.log('No projects found');
