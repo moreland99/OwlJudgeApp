@@ -4,9 +4,12 @@ import {
   TouchableWithoutFeedback, Keyboard
 } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getDatabase, ref, set } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
 
 const CreateAccount = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const auth = getAuth();
@@ -16,6 +19,7 @@ const CreateAccount = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      if (user) {
   
       // Use the UID from the authentication as the key for the judge's entry
       const judgeRef = ref(getDatabase(), 'judges/' + user.uid);
@@ -24,6 +28,8 @@ const CreateAccount = () => {
       await set(judgeRef, {
         uid: user.uid, // Use Firebase Authentication UID as judge ID
         email: email,
+        firstName: firstName,
+        lastName: lastName,
         role: 'judge',
         // Add any additional judge details here
       });
@@ -35,8 +41,9 @@ const CreateAccount = () => {
         [{ text: 'OK' }]
       );
       navigation.navigate('Login'); // Navigate back to the login screen
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Signup error", error);
       Alert.alert('Error', error.message, [{ text: 'OK' }]);
     }
   };
@@ -47,6 +54,18 @@ const CreateAccount = () => {
       <View style={styles.container}>
         <Image source={require('../assets/owlJudgeLogo.png')} style={styles.logo} />
         <Text style={styles.title}>Create Account</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name"
+          value={lastName}
+          onChangeText={setLastName}
+        />
         <TextInput
           style={styles.input}
           placeholder="Email"
