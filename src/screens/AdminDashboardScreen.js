@@ -110,23 +110,30 @@ const AdminDashboardScreen = ({ navigation }) => {
   
         {/* Notifications Section */}
         {judgeRequests.length > 0 && (
-          <>
-            <Text style={styles.notificationsHeader}>Notifications</Text>
-            {judgeRequests.map((request) => (
-              <Card key={request.id} style={styles.notificationCard}>
-                <Card.Title
-                  title={`Judge Request: ${request.judgeName || "Unknown"}`}
-                  subtitle={`Project: ${request.projectTitle}`}
-                  left={(props) => <List.Icon {...props} icon="bell-ring" color={theme.colors.notification} />}
-                  right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>}
-                />
-                <Card.Actions>
-                  <Button onPress={() => navigation.navigate('JudgeDetails', { judgeId: request.judgeId })}>View Details</Button>
-                </Card.Actions>
-              </Card>
-            ))}
-          </>
-        )}
+  <>
+    <Text style={styles.notificationsHeader}>Notifications</Text>
+    {judgeRequests.map(request => (
+      <Card key={request.id} style={{ margin: 10 }}>
+        <Card.Title
+          title={`Judge Request: ${request.judgeName}`}
+          subtitle={`Project: ${request.projectTitle}`}
+          left={(props) => <List.Icon {...props} icon="bell-ring" color={theme.colors.notification} />} // Add List.Icon component with bell-ring icon
+          right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>} // Add Badge component with "NEW" label
+        />
+        <Card.Actions>
+          <Button onPress={() => {
+            // Pass the judgeId, projectId, and potentially the eventId (if available) to the AssignJudges screen
+            navigation.navigate('AssignJudges', {
+              judgeId: request.judgeId,
+              eventId: request.eventId,
+              projectId: request.projectId
+            });
+          }}>View Details</Button>
+        </Card.Actions>
+      </Card>
+    ))}
+  </>
+)}
       </View>
       <Portal>
         <Modal visible={isModalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
