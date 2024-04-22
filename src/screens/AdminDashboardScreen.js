@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'rea
 import { Button, Card, useTheme, Modal, Portal, List, Badge, IconButton } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
+import CustomTheme from '../../theme';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [eventCount, setEventCount] = useState(0);
@@ -14,9 +15,10 @@ const AdminDashboardScreen = ({ navigation }) => {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedJudgeId, setSelectedJudgeId] = useState(null);
   const [judgeRequests, setJudgeRequests] = useState([]);
+  const [showAllRequests, setShowAllRequests] = useState(false);
   
-  const theme = useTheme();
-  const styles = getDynamicStyles(theme);
+  const CustomTheme = useTheme();
+  const styles = getDynamicStyles(CustomTheme);
 
   const [notificationsCount, setNotificationsCount] = useState(0); // To keep track of the number of notifications
 
@@ -25,6 +27,7 @@ const AdminDashboardScreen = ({ navigation }) => {
     const eventListRef = ref(db, 'events/');
     const judgeListRef = ref(db, 'judges/');
     const projectListRef = ref(db, 'projects/'); 
+    const requestsRef = ref(db, 'judgeRequests');
 
 
     // Fetch Events
@@ -66,23 +69,28 @@ const AdminDashboardScreen = ({ navigation }) => {
     });
 
  // Fetch Judge Requests
- const requestsRef = ref(db, 'judgeRequests');
  onValue(requestsRef, (snapshot) => {
-   const requests = [];
-   snapshot.forEach((requestSnapshot) => {
-     const requestId = requestSnapshot.key;
-     const request = requestSnapshot.val();
-     requests.push({
-       id: requestId,
-       ...request
-     });
-   });
-   setJudgeRequests(requests);
-   setNotificationsCount(requests.length); // Update the notifications count
- }, (error) => {
-   console.error("Firebase onValue error: ", error);
- });
-}, []);
+  const now = Date.now();
+  const twoHoursAgo = now - 2 * 60 * 60 * 1000;
+  const requests = [];
+
+  snapshot.forEach((requestSnapshot) => {
+    const requestId = requestSnapshot.key;
+    const request = requestSnapshot.val();
+    // Apply the time filter only if showAllRequests is false
+    if (showAllRequests || new Date(request.requestDate).getTime() >= twoHoursAgo) {
+      requests.push({
+        id: requestId,
+        ...request
+      });
+    }
+  });
+
+  setJudgeRequests(requests);
+}, (error) => {
+  console.error("Firebase onValue error: ", error);
+});
+}, [showAllRequests]); // Re-run the effect when showAllRequests changes
 
 
 
@@ -91,6 +99,10 @@ const AdminDashboardScreen = ({ navigation }) => {
   const closeModal = () => setModalVisible(false);
   const handleSelectEvent = (eventId) => setSelectedEventId(eventId);
   const handleSelectJudge = (judgeId) => setSelectedJudgeId(judgeId);
+
+  const toggleRequestView = () => {
+    setShowAllRequests(!showAllRequests);
+  };
 
   return (
     <ScrollView style={styles.fullscreen}>
@@ -107,92 +119,102 @@ const AdminDashboardScreen = ({ navigation }) => {
           <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
           <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
-  
-        {/* Notifications Section */}
+
+        <Button
+  onPress={toggleRequestView}
+  contentStyle={styles.toggleButton} // Use contentStyle instead of style
+  labelStyle={styles.toggleButtonText} // Set labelStyle for button text
+>
+  {showAllRequests ? "Show Only Recent Requests" : "Show All Requests"}
+</Button>
+
+
+
         {judgeRequests.length > 0 && (
-  <>
-    <Text style={styles.notificationsHeader}>Notifications</Text>
-    {judgeRequests.map(request => (
-      <Card key={request.id} style={{ margin: 10 }}>
-        <Card.Title
-          title={`Judge Request: ${request.judgeName}`}
-          subtitle={`Project: ${request.projectTitle}`}
-          left={(props) => <List.Icon {...props} icon="bell-ring" color={theme.colors.notification} />} // Add List.Icon component with bell-ring icon
-          right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>} // Add Badge component with "NEW" label
-        />
-        <Card.Actions>
-          <Button onPress={() => {
-            // Pass the judgeId, projectId, and potentially the eventId (if available) to the AssignJudges screen
-            navigation.navigate('AssignJudges', {
-              judgeId: request.judgeId,
-              eventId: request.eventId,
-              projectId: request.projectId
-            });
-          }}>View Details</Button>
-        </Card.Actions>
-      </Card>
-    ))}
-  </>
-)}
+          <>
+            <Text style={styles.notificationsHeader}>Notifications</Text>
+            {judgeRequests.map(request => (
+              <Card key={request.id} style={{ margin: 10 }}>
+                <Card.Title
+                  title={`Judge Request: ${request.judgeName}`}
+                  subtitle={`Project: ${request.projectTitle}`}
+                  left={(props) => <List.Icon {...props} icon="bell-ring" color={CustomTheme.colors.notification} />}
+                  right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>}
+                  CustomTheme={CustomTheme} // Pass the CustomTheme as a prop
+                />
+                <Card.Actions>
+                  <Button onPress={() => {
+                    navigation.navigate('AssignJudges', {
+                      judgeId: request.judgeId,
+                      eventId: request.eventId,
+                      projectId: request.projectId
+                    });
+                  }}>View Details</Button>
+                </Card.Actions>
+              </Card>
+            ))}
+          </>
+        )}
       </View>
       <Portal>
-        <Modal visible={isModalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
-          {/* ... Modal content ... */}
+        <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+          {/* Modal content could go here */}
         </Modal>
       </Portal>
     </ScrollView>
   );
-  
 };
 
-const getDynamicStyles = (theme) => StyleSheet.create({
+
+const getDynamicStyles = () => StyleSheet.create({
   fullscreen: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: CustomTheme.colors.background,
   },
   container: {
-    flex: 1, // Ensure the container takes full available space
+    flex: 1,
     padding: 10,
   },
   quickLinksContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around', // Changed to 'space-around' for better spacing
+    justifyContent: 'space-around',
   },
   quickLinkCard: {
-    width: '48%', // Slightly less than half to fit two items per row
-    margin: 2, // Uniform margin for vertical and horizontal
+    width: '48%',
+    margin: 2,
     padding: 10,
-    alignItems: 'center', // Center items inside the card
+    alignItems: 'center',
+    backgroundColor: CustomTheme.colors.surface,
   },
   card: {
-    borderRadius: 15,
-    flex: 1, // Ensures the card stretches to fill the space
-    justifyContent: 'center', // Centers content vertically within the card
+    borderRadius: CustomTheme.roundness,
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: CustomTheme.colors.surface,
   },
   buttonIcon: {
     justifyContent: 'center',
-    fontSize: 16, // Adjusted for better text visibility
+    fontSize: 16,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    // other styles like padding or margin if necessary
   },
-  
   statCard: {
     flex: 1,
     alignItems: 'center',
     marginBottom: 10,
+    backgroundColor: CustomTheme.colors.surface,
   },
   statLabel: {
     fontSize: 16,
-    color: theme.colors.onSurface,
+    color: CustomTheme.colors.text,
   },
   statCount: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    color: CustomTheme.colors.primary,
   },
   modalContainer: {
     backgroundColor: 'white',
@@ -204,20 +226,31 @@ const getDynamicStyles = (theme) => StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
-    color: theme.colors.primary,
     paddingLeft: 10,
+    color: CustomTheme.colors.primary,
   },
   notificationCard: {
     marginVertical: 5,
     marginHorizontal: 10,
-    borderColor: theme.colors.notification,
-    borderWidth: 1, // Adding a border to highlight the notification card
+    borderColor: CustomTheme.colors.notification,
+    borderWidth: 1,
   },
   badge: {
-    backgroundColor: theme.colors.accent, // Use accent color for the badge
-    color: 'white', // White text color for the badge
-  }
+    backgroundColor: CustomTheme.colors.accent,
+    color: 'white',
+  },
+  toggleButton: {
+    backgroundColor: CustomTheme.colors.secondary,
+    padding: 10,
+    elevation: 4,
+    borderRadius: CustomTheme.roundness,
+  },
+  toggleButtonText: {
+    color: CustomTheme.colors.text,
+  },
 });
+
+
 
 
 const StatCard = ({ label, count, styles }) => (
