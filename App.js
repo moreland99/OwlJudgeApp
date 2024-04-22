@@ -26,6 +26,7 @@ import EventListScreen from './src/screens/EventListScreen';
 import EventDetailsScreen from './src/screens/EventDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
+import ProjectListScreen from './src/screens/ProjectListScreen';
 
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const EventStack = createNativeStackNavigator();
@@ -87,7 +88,7 @@ const JudgeTabNavigator = ({ isAdmin}) => (
   >
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
     <Tab.Screen name="Events" component={EventStackNavigator} /> 
-    <Tab.Screen name="Projects" component={ProjectSubmissionScreen} />
+    <Tab.Screen name="Projects" component={ProjectListScreen} />
      {/* Conditionally render the Admin tab if isAdmin is true */}
 {isAdmin && (
   <Tab.Screen

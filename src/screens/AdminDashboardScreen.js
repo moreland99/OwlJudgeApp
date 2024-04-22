@@ -4,6 +4,7 @@ import { Button, Card, useTheme, Modal, Portal, List } from 'react-native-paper'
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import { assignJudgeToEvent } from '../firebase/firebaseOperations';
+import { app } from '../firebase/firebaseConfig';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [eventCount, setEventCount] = useState(0);
@@ -22,6 +23,7 @@ const AdminDashboardScreen = ({ navigation }) => {
     const db = getDatabase();
     const eventListRef = ref(db, 'events/');
     const judgeListRef = ref(db, 'judges/');
+    const projectListRef = ref(db, 'projects/');
 
     onValue(eventListRef, (snapshot) => {
       const events = [];
@@ -45,6 +47,18 @@ const AdminDashboardScreen = ({ navigation }) => {
       });
       setJudgesList(judges);
       setJudgeCount(judges.length);
+    });
+
+    onValue(projectListRef, (snapshot) => {
+      // Logic to handle the project count
+      const projects = [];
+      snapshot.forEach((childSnapshot) => {
+        projects.push({
+          id: childSnapshot.key,
+          ...childSnapshot.val(),
+        });
+      });
+      setProjectCount(projects.length); // Set the project count based on the number of projects
     });
   }, []);
 
