@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Card, Button } from 'react-native-paper';
-import { getDatabase, ref, onValue, update } from 'firebase/database';
-import { app } from '../firebase/firebaseConfig';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  TextInput,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { Card, Button } from "react-native-paper";
+import { getDatabase, ref, onValue, update } from "firebase/database";
+import { app } from "../firebase/firebaseConfig";
+import { useNavigation } from "@react-navigation/native";
 
 const AssignJudgesScreen = () => {
   const navigation = useNavigation();
@@ -16,135 +24,176 @@ const AssignJudgesScreen = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedJudge, setSelectedJudge] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [searchEvent, setSearchEvent] = useState('');
-  const [searchJudge, setSearchJudge] = useState('');
-  const [searchProject, setSearchProject] = useState('');
+  const [searchEvent, setSearchEvent] = useState("");
+  const [searchJudge, setSearchJudge] = useState("");
+  const [searchProject, setSearchProject] = useState("");
 
   useEffect(() => {
     const db = getDatabase(app);
 
     // Fetch events
-    const eventsRef = ref(db, 'events/');
-    onValue(eventsRef, snapshot => {
-      const eventData = snapshot.val() || {};
-      const eventsArray = Object.keys(eventData).map(key => ({
-        id: key,
-        ...eventData[key]
-      }));
-      setEvents(eventsArray);
-      setFilteredEvents(eventsArray);
-    }, error => {
-      Alert.alert("Firebase Error", "Failed to fetch events: " + error.message);
-    });
+    const eventsRef = ref(db, "events/");
+    onValue(
+      eventsRef,
+      (snapshot) => {
+        const eventData = snapshot.val() || {};
+        const eventsArray = Object.keys(eventData).map((key) => ({
+          id: key,
+          ...eventData[key],
+        }));
+        setEvents(eventsArray);
+        setFilteredEvents(eventsArray);
+      },
+      (error) => {
+        Alert.alert(
+          "Firebase Error",
+          "Failed to fetch events: " + error.message
+        );
+      }
+    );
 
     // Fetch judges
-    const judgesRef = ref(db, 'judges/');
-    onValue(judgesRef, snapshot => {
-      const judgeData = snapshot.val() || {};
-      const judgesArray = Object.keys(judgeData).map(key => ({
-        id: key,
-        ...judgeData[key]
-      }));
-      setJudges(judgesArray);
-      setFilteredJudges(judgesArray);
-    }, error => {
-      console.error("Firebase Error", error);
-      Alert.alert("Firebase Error", "Failed to fetch judges: " + error.message);
-    });
+    const judgesRef = ref(db, "judges/");
+    onValue(
+      judgesRef,
+      (snapshot) => {
+        const judgeData = snapshot.val() || {};
+        const judgesArray = Object.keys(judgeData).map((key) => ({
+          id: key,
+          ...judgeData[key],
+        }));
+        setJudges(judgesArray);
+        setFilteredJudges(judgesArray);
+      },
+      (error) => {
+        console.error("Firebase Error", error);
+        Alert.alert(
+          "Firebase Error",
+          "Failed to fetch judges: " + error.message
+        );
+      }
+    );
 
-// Fetch projects
-const projectsRef = ref(db, 'projects/');
-onValue(projectsRef, snapshot => {
-  const projectData = snapshot.val() || {};
-  const projectsArray = Object.keys(projectData).map(key => ({
-    id: key,
-    ...projectData[key]
-  }));
-  setProjects(projectsArray);
-}, error => {
-  Alert.alert("Firebase Error", "Failed to fetch projects: " + error.message);
-});
-
-
+    // Fetch projects
+    const projectsRef = ref(db, "projects/");
+    onValue(
+      projectsRef,
+      (snapshot) => {
+        const projectData = snapshot.val() || {};
+        const projectsArray = Object.keys(projectData).map((key) => ({
+          id: key,
+          ...projectData[key],
+        }));
+        setProjects(projectsArray);
+      },
+      (error) => {
+        Alert.alert(
+          "Firebase Error",
+          "Failed to fetch projects: " + error.message
+        );
+      }
+    );
   }, []);
 
   useEffect(() => {
     console.log("Projects loaded:", projects);
     console.log("Selected event ID:", selectedEvent?.id);
-  
+
     if (selectedEvent) {
-      const filtered = projects.filter(project => {
+      const filtered = projects.filter((project) => {
         console.log("Project event ID:", project.event);
         return String(project.event) === String(selectedEvent.id);
       });
-  
+
       console.log(`Filtered projects for event ${selectedEvent.id}:`, filtered);
       setFilteredProjects(filtered);
     } else {
       setFilteredProjects([]);
     }
   }, [selectedEvent, projects]);
-  
-  
 
-  
-  
-
-  const handleSearchEvent = text => {
+  const handleSearchEvent = (text) => {
     setSearchEvent(text);
     if (!text.trim()) {
       setFilteredEvents(events);
     } else {
-      const filtered = events.filter(e => e.name.toLowerCase().includes(text.toLowerCase()));
+      const filtered = events.filter((e) =>
+        e.name.toLowerCase().includes(text.toLowerCase())
+      );
       setFilteredEvents(filtered);
     }
   };
 
-  const handleSearchJudge = text => {
+  const handleSearchJudge = (text) => {
     setSearchJudge(text);
     if (!text.trim()) {
       setFilteredJudges(judges);
     } else {
-      const filtered = judges.filter(j => j.email.toLowerCase().includes(text.toLowerCase()));
+      const filtered = judges.filter((j) =>
+        j.email.toLowerCase().includes(text.toLowerCase())
+      );
       setFilteredJudges(filtered);
     }
   };
 
-  const handleSearchProject = text => {
+  const handleSearchProject = (text) => {
     setSearchProject(text);
     if (!text.trim()) {
       setFilteredProjects(projects);
     } else {
-      const filtered = projects.filter(project => project.name.toLowerCase().includes(text.toLowerCase()));
+      const filtered = projects.filter((project) =>
+        project.name.toLowerCase().includes(text.toLowerCase())
+      );
       setFilteredProjects(filtered);
     }
   };
 
-    // Make sure to update the selectedProject with an object, not just the id
-    const onProjectSelected = (itemValue) => {
-      const project = projects.find(p => p.id === itemValue);
-      setSelectedProject(project);
-    };
-  
+  // Make sure to update the selectedProject with an object, not just the id
+  const onProjectSelected = (itemValue) => {
+    const project = projects.find((p) => p.id === itemValue);
+    setSelectedProject(project);
+  };
+
   const assignJudgeToEventAndProject = () => {
     if (!selectedEvent || !selectedJudge || !selectedProject) {
-      Alert.alert("Selection Missing", "Please select an event, a judge, and a project.");
+      Alert.alert(
+        "Selection Missing",
+        "Please select an event, a judge, and a project."
+      );
       return;
     }
 
     const db = getDatabase(app);
     const updates = {};
-    updates[`judges/${selectedJudge.id}/assignedEvents/${selectedEvent.id}`] = true;
-    updates[`judges/${selectedJudge.id}/assignedProjects/${selectedProject.id}`] = true;
+    updates[
+      `judges/${selectedJudge.id}/assignedEvents/${selectedEvent.id}`
+    ] = true;
+    updates[
+      `judges/${selectedJudge.id}/assignedProjects/${selectedProject.id}`
+    ] = true;
 
     update(ref(db), updates)
-      .then(() => Alert.alert("Assignment Complete", "Judge and project have been assigned to the event successfully."))
-      .catch(error => Alert.alert("Assignment Failed", "Failed to assign judge and project: " + error.message));
+      .then(() =>
+        Alert.alert(
+          "Assignment Complete",
+          "Judge and project have been assigned to the event successfully."
+        )
+      )
+      .catch((error) =>
+        Alert.alert(
+          "Assignment Failed",
+          "Failed to assign judge and project: " + error.message
+        )
+      );
   };
 
   return (
     <View style={styles.container}>
-      <Button icon="arrow-left" mode="outlined" onPress={() => navigation.goBack()}>
+      <Button
+        icon="arrow-left"
+        mode="outlined"
+        onPress={() => navigation.goBack()}
+      >
         Go Back
       </Button>
 
@@ -157,13 +206,16 @@ onValue(projectsRef, snapshot => {
         />
         <FlatList
           data={filteredEvents}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => setSelectedEvent(item)}
               style={[
                 styles.listItem,
-                { backgroundColor: item.id === selectedEvent?.id ? '#e0e0e0' : '#f9f9f9' }
+                {
+                  backgroundColor:
+                    item.id === selectedEvent?.id ? "#e0e0e0" : "#f9f9f9",
+                },
               ]}
             >
               <Text style={styles.listItemText}>{item.name}</Text>
@@ -177,13 +229,16 @@ onValue(projectsRef, snapshot => {
           <Text style={styles.label}>Projects for the selected event:</Text>
           <FlatList
             data={filteredProjects}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => setSelectedProject(item)}
                 style={[
                   styles.listItem,
-                  { backgroundColor: item.id === selectedProject?.id ? '#e0e0e0' : '#f9f9f9' }
+                  {
+                    backgroundColor:
+                      item.id === selectedProject?.id ? "#e0e0e0" : "#f9f9f9",
+                  },
                 ]}
               >
                 <Text style={styles.listItemText}>{item.title}</Text>
@@ -200,14 +255,18 @@ onValue(projectsRef, snapshot => {
       />
       <FlatList
         data={filteredJudges}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => setSelectedJudge(item)}
             style={[
               styles.listItem,
-              { backgroundColor: item.id === selectedJudge?.id ? '#e0e0e0' : '#f9f9f9' }
-            ]}>
+              {
+                backgroundColor:
+                  item.id === selectedJudge?.id ? "#e0e0e0" : "#f9f9f9",
+              },
+            ]}
+          >
             <Text style={styles.listItemText}>{item.email}</Text>
           </TouchableOpacity>
         )}
@@ -215,7 +274,8 @@ onValue(projectsRef, snapshot => {
       <Button
         mode="contained"
         onPress={assignJudgeToEventAndProject}
-        style={styles.button}>
+        style={styles.button}
+      >
         Assign Judge and Project
       </Button>
     </View>
@@ -226,14 +286,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: 'space-between', // Adjusted to space out the content
+    justifyContent: "space-between", // Adjusted to space out the content
   },
   section: {
     marginBottom: 20,
     padding: 10,
     borderRadius: 5,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -246,26 +306,26 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     height: 40,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 1,
   },
   listItem: {
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: "#ddd",
   },
   pickerContainer: {
     marginTop: 20, // Add space above the picker container
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
   },
   picker: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 1,
   },
   button: {
@@ -274,6 +334,4 @@ const styles = StyleSheet.create({
   // Add any additional styles you need for other elements
 });
 
-
 export default AssignJudgesScreen;
-
