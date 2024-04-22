@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Card, Button } from 'react-native-paper';
-import { getDatabase, ref, onValue, set, get } from 'firebase/database';
-import { getAuth } from 'firebase/auth';
+import { getDatabase, ref, onValue, update } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
-import { Picker } from '@react-native-picker/picker'; // Import Picker from the new package
 
 const AssignJudgesScreen = () => {
   const navigation = useNavigation();
@@ -54,30 +52,43 @@ const AssignJudgesScreen = () => {
       Alert.alert("Firebase Error", "Failed to fetch judges: " + error.message);
     });
 
-    // Fetch projects
-    const projectsRef = ref(db, 'projects/');
-    onValue(projectsRef, snapshot => {
-      const projectData = snapshot.val() || {};
-      const projectsArray = Object.keys(projectData).map(key => ({
-        id: key,
-        ...projectData[key]
-      }));
-      setProjects(projectsArray);
-    }, error => {
-      Alert.alert("Firebase Error", "Failed to fetch projects: " + error.message);
-    });
+// Fetch projects
+const projectsRef = ref(db, 'projects/');
+onValue(projectsRef, snapshot => {
+  const projectData = snapshot.val() || {};
+  const projectsArray = Object.keys(projectData).map(key => ({
+    id: key,
+    ...projectData[key]
+  }));
+  setProjects(projectsArray);
+}, error => {
+  Alert.alert("Firebase Error", "Failed to fetch projects: " + error.message);
+});
+
 
   }, []);
 
   useEffect(() => {
-    // Filter projects based on selected event
+    console.log("Projects loaded:", projects);
+    console.log("Selected event ID:", selectedEvent?.id);
+  
     if (selectedEvent) {
-      const filtered = projects.filter(project => project.eventId === selectedEvent.id);
+      const filtered = projects.filter(project => {
+        console.log("Project event ID:", project.event);
+        return String(project.event) === String(selectedEvent.id);
+      });
+  
+      console.log(`Filtered projects for event ${selectedEvent.id}:`, filtered);
       setFilteredProjects(filtered);
     } else {
       setFilteredProjects([]);
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, projects]);
+  
+  
+
+  
+  
 
   const handleSearchEvent = text => {
     setSearchEvent(text);
@@ -108,6 +119,12 @@ const AssignJudgesScreen = () => {
       setFilteredProjects(filtered);
     }
   };
+
+    // Make sure to update the selectedProject with an object, not just the id
+    const onProjectSelected = (itemValue) => {
+      const project = projects.find(p => p.id === itemValue);
+      setSelectedProject(project);
+    };
   
   const assignJudgeToEventAndProject = () => {
     if (!selectedEvent || !selectedJudge || !selectedProject) {
@@ -116,34 +133,13 @@ const AssignJudgesScreen = () => {
     }
 
     const db = getDatabase(app);
-    const judgeAssignmentsRef = ref(db, `judges/${selectedJudge.id}/assignedEvents`);
-    const projectAssignmentsRef = ref(db, `judges/${selectedJudge.id}/assignedProjects`);
+    const updates = {};
+    updates[`judges/${selectedJudge.id}/assignedEvents/${selectedEvent.id}`] = true;
+    updates[`judges/${selectedJudge.id}/assignedProjects/${selectedProject.id}`] = true;
 
-    // Update judge's assigned events
-    get(judgeAssignmentsRef).then((snapshot) => {
-      const currentEventAssignments = snapshot.val() || [];
-      if (!currentEventAssignments.includes(selectedEvent.id)) {
-        const updatedEventAssignments = [...currentEventAssignments, selectedEvent.id];
-        set(judgeAssignmentsRef, updatedEventAssignments)
-          .then(() => {
-            // Update judge's assigned projects
-            get(projectAssignmentsRef).then((snapshot) => {
-              const currentProjectAssignments = snapshot.val() || [];
-              if (!currentProjectAssignments.includes(selectedProject.id)) {
-                const updatedProjectAssignments = [...currentProjectAssignments, selectedProject.id];
-                set(projectAssignmentsRef, updatedProjectAssignments)
-                  .then(() => Alert.alert("Assignment Complete", "Judge and project have been assigned to the event successfully."))
-                  .catch(error => Alert.alert("Assignment Failed", error.message));
-              } else {
-                Alert.alert("Assignment Exists", "This judge is already assigned to the selected project.");
-              }
-            });
-          })
-          .catch(error => Alert.alert("Assignment Failed", error.message));
-      } else {
-        Alert.alert("Assignment Exists", "This judge is already assigned to the selected event.");
-      }
-    });
+    update(ref(db), updates)
+      .then(() => Alert.alert("Assignment Complete", "Judge and project have been assigned to the event successfully."))
+      .catch(error => Alert.alert("Assignment Failed", "Failed to assign judge and project: " + error.message));
   };
 
   return (
@@ -151,39 +147,49 @@ const AssignJudgesScreen = () => {
       <Button icon="arrow-left" mode="outlined" onPress={() => navigation.goBack()}>
         Go Back
       </Button>
-      <TextInput
-        placeholder="Search for an event"
-        value={searchEvent}
-        onChangeText={handleSearchEvent}
-        style={styles.searchInput}
-      />
-      <FlatList
-        data={filteredEvents}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => setSelectedEvent(item)}
-            style={[
-              styles.listItem,
-              { backgroundColor: item.id === selectedEvent?.id ? '#e0e0e0' : '#f9f9f9' }
-            ]}>
-            <Text style={styles.listItemText}>{item.name}</Text>
-          </TouchableOpacity>
-        )}
-      />
+
+      <View style={styles.section}>
+        <TextInput
+          placeholder="Search for an event"
+          value={searchEvent}
+          onChangeText={handleSearchEvent}
+          style={styles.searchInput}
+        />
+        <FlatList
+          data={filteredEvents}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => setSelectedEvent(item)}
+              style={[
+                styles.listItem,
+                { backgroundColor: item.id === selectedEvent?.id ? '#e0e0e0' : '#f9f9f9' }
+              ]}
+            >
+              <Text style={styles.listItemText}>{item.name}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+
       {selectedEvent && (
-        <View style={styles.pickerContainer}>
-          <Text style={styles.label}>Select a Project:</Text>
-          <Picker
-            selectedValue={selectedProject}
-            onValueChange={(itemValue, itemIndex) => setSelectedProject(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select a Project" value={null} />
-            {filteredProjects.map(project => (
-              <Picker.Item key={project.id} label={project.name} value={project} />
-            ))}
-          </Picker>
+        <View style={styles.section}>
+          <Text style={styles.label}>Projects for the selected event:</Text>
+          <FlatList
+            data={filteredProjects}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => setSelectedProject(item)}
+                style={[
+                  styles.listItem,
+                  { backgroundColor: item.id === selectedProject?.id ? '#e0e0e0' : '#f9f9f9' }
+                ]}
+              >
+                <Text style={styles.listItemText}>{item.title}</Text>
+              </TouchableOpacity>
+            )}
+          />
         </View>
       )}
       <TextInput
@@ -220,6 +226,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    justifyContent: 'space-between', // Adjusted to space out the content
+  },
+  section: {
+    marginBottom: 20,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   searchInput: {
     marginBottom: 10,
@@ -235,10 +256,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   pickerContainer: {
-    marginBottom: 10,
+    marginTop: 20, // Add space above the picker container
   },
   label: {
     fontSize: 16,
+    fontWeight: 'bold',
     marginBottom: 5,
   },
   picker: {
@@ -246,7 +268,12 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
     borderWidth: 1,
   },
+  button: {
+    marginVertical: 20, // Increase vertical margin for the button
+  },
+  // Add any additional styles you need for other elements
 });
+
 
 export default AssignJudgesScreen;
 

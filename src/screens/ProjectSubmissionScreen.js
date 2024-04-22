@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform } from 're
 import { Picker } from '@react-native-picker/picker';
 import { Button, TextInput, Text, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { getDatabase, ref, push, onValue, set } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 
 const ProjectSubmissionScreen = ({ navigation }) => {
@@ -36,8 +36,8 @@ const ProjectSubmissionScreen = ({ navigation }) => {
   const handleSubmit = () => {
     const database = getDatabase(app);
     const projectsRef = ref(database, 'projects');
-    const newProjectRef = push(projectsRef);
-
+    const newProjectRef = push(projectsRef); // This generates a new unique key for the project
+  
     const newProject = {
       id: newProjectRef.key,
       teamMembers,
@@ -45,8 +45,8 @@ const ProjectSubmissionScreen = ({ navigation }) => {
       summary,
       event: selectedEvent
     };
-
-    push(newProjectRef, newProject)
+  
+    set(newProjectRef, newProject) // Use 'set' instead of 'push' to set the project data
       .then(() => {
         alert('Project submitted successfully with ID ' + newProjectRef.key + '!');
         navigation.goBack();
@@ -55,6 +55,7 @@ const ProjectSubmissionScreen = ({ navigation }) => {
         alert("Failed to submit project: " + error.message);
       });
   };
+  
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
