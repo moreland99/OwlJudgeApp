@@ -17,6 +17,7 @@ const JudgeDashboardScreen = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const db = getDatabase();
   const auth = getAuth();
+  const [judgeData, setJudgeData] = useState(null); // State variable to hold judge's data
 
 
   useEffect(() => {
@@ -26,7 +27,9 @@ const JudgeDashboardScreen = () => {
         const judgeProfileRef = ref(db, `judges/${newUser.uid}`);
         get(judgeProfileRef).then((snapshot) => {
           if (snapshot.exists()) {
-            const { assignedEvents } = snapshot.val();
+            const judgeDataFromDB = snapshot.val(); // Assuming snapshot.val() returns the judge's data
+            setJudgeData(judgeDataFromDB); // Set the judge's data in the state variable
+            const { assignedEvents } = judgeDataFromDB;
             const eventIDs = Object.keys(assignedEvents).filter(key => assignedEvents[key] === true);
             const eventDetailsPromises = eventIDs.map(eventId =>
               get(ref(db, `events/${eventId}`))
@@ -47,8 +50,9 @@ const JudgeDashboardScreen = () => {
       }
     });
   
-    return () => unsubscribe();
+    return () => unsubscribe(); 
   }, []);
+
   
 
   const handleEventSelect = (event) => {
@@ -60,10 +64,14 @@ const JudgeDashboardScreen = () => {
     setModalVisible(false);
   };
 
+  // Function to greet the user based on the time of the day and judge's first name
   const greetUser = () => {
     const hour = new Date().getHours();
-    return hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
-  };  
+    const userName = judgeData?.firstName || ''; // Use the first name from judge's data
+    return hour < 12 ? `Good Morning, ${userName}` : hour < 18 ? `Good Afternoon, ${userName}` : `Good Evening, ${userName}`;
+  };
+  
+   
 
   const renderEventCard = ({ item }) => (
     <TouchableOpacity onPress={() => handleEventSelect(item)}>
@@ -84,36 +92,35 @@ const JudgeDashboardScreen = () => {
       return startDateA - startDateB;
     };
 
-  return (
-    <View style={styles.container}>
-      <LogoutButton />
-      <Text style={styles.welcomeText}>{`${greetUser()} ${user?.displayName || user?.email}`}</Text>
-      <Text style={styles.header}>Upcoming Events</Text>
-      <FlatList
-        data={upcomingEvents.sort(sortByStartDate)}
-        renderItem={renderEventCard}
-        keyExtractor={(item) => item.id}
-    
-      />
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={handleCloseModal}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalTextTitle}>{currentEvent?.name}</Text>
-            <Text style={styles.modalTextDetail}>{`Details: ${currentEvent?.details}`}</Text>
-            <Text style={styles.modalTextDate}>{`From: ${currentEvent?.startDate ? format(parseISO(currentEvent.startDate), 'PPPP') : 'N/A'} To: ${currentEvent?.endDate ? format(parseISO(currentEvent.endDate), 'PPPP') : 'N/A'}`}</Text>
-            <Text style={styles.modalTextTime}>{`Time: ${currentEvent?.startTime ? format(parseISO(currentEvent.startTime), 'pp') : 'N/A'} - ${currentEvent?.endTime ? format(parseISO(currentEvent.endTime), 'pp') : 'N/A'}`}</Text>
-            <Button mode="contained" onPress={handleCloseModal}>Close</Button>
+    return (
+      <View style={styles.container}>
+        <LogoutButton />
+        <Text style={styles.welcomeText}>{greetUser()}</Text>
+        <Text style={styles.header}>Upcoming Events</Text>
+        <FlatList
+          data={upcomingEvents.sort(sortByStartDate)}
+          renderItem={renderEventCard}
+          keyExtractor={(item) => item.id}
+        />
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={handleCloseModal}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTextTitle}>{currentEvent?.name}</Text>
+              <Text style={styles.modalTextDetail}>{`Details: ${currentEvent?.details}`}</Text>
+              <Text style={styles.modalTextDate}>{`From: ${currentEvent?.startDate ? format(parseISO(currentEvent.startDate), 'PPPP') : 'N/A'} To: ${currentEvent?.endDate ? format(parseISO(currentEvent.endDate), 'PPPP') : 'N/A'}`}</Text>
+              <Text style={styles.modalTextTime}>{`Time: ${currentEvent?.startTime ? format(parseISO(currentEvent.startTime), 'pp') : 'N/A'} - ${currentEvent?.endTime ? format(parseISO(currentEvent.endTime), 'pp') : 'N/A'}`}</Text>
+              <Button mode="contained" onPress={handleCloseModal}>Close</Button>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
-  );
-};
+        </Modal>
+      </View>
+    );
+  };
 
 const styles = StyleSheet.create({
   container: {
