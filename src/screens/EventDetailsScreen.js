@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Text } from 'react-native';
+import { View, FlatList, StyleSheet, Text, Alert } from 'react-native';
 import { Card, Paragraph, Button, List } from 'react-native-paper';
 import { format, parseISO, isValid } from 'date-fns';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, set, push } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 
 const EventDetailsScreen = ({ route, navigation }) => {
@@ -39,10 +40,86 @@ const EventDetailsScreen = ({ route, navigation }) => {
         <List.Item
             title={item.title}
             description={item.summary}
-            onPress={() => navigation.navigate('ScoringScreen', { projectId: item.id })}
+            onPress={() => {
+                Alert.alert(
+                    "Judge Request",
+                    "Do you want to make a request to judge this project?",
+                    [
+                        {
+                            text: "Cancel",
+                            onPress: () => console.log("Cancel Pressed"),
+                            style: "cancel"
+                        },
+                        { 
+                            text: "Yes", onPress: () => handleJudgeRequest(item.id, item.title)
+                        }
+                    ]
+                );
+            }}
             left={props => <List.Icon {...props} icon="star" />}
         />
     );
+
+// Example of how to write a new judge request in a flattened structure:
+
+const handleJudgeRequest = (projectId, projectTitle) => {
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+  
+    if (user) {
+      const db = getDatabase(app);
+      const judgeProfileRef = ref(db, `judges/${user.uid}`);
+  
+      get(judgeProfileRef).then((profileSnapshot) => {
+        if (profileSnapshot.exists()) {
+          const profile = profileSnapshot.val();
+          // Assuming 'firstName' and 'lastName' are the keys where the judge's name is stored.
+          const judgeName = profile.firstName && profile.lastName ? `${profile.firstName} ${profile.lastName}` : null;
+  
+          if (!judgeName) {
+            Alert.alert("Error", "Judge name is not available.");
+            return; // Exit the function if the judge's name is not found
+          }
+          const requestData = {
+            judgeId: user.uid,
+            judgeName: judgeName, // Assuming 'name' is where the judge's name is stored
+            judgeEmail: profile.email, // Assuming 'email' is where the judge's email is stored
+            projectId: projectId,
+            projectTitle: projectTitle,
+            requestDate: new Date().toISOString(),
+            status: "pending"
+            // ... other request data ...
+          };
+  
+          // Get the reference to the 'judgeRequests' node
+          const requestsRef = ref(db, 'judgeRequests');
+          // Use push() to create a new child with a unique key
+          const newRequestRef = push(requestsRef);
+  
+          // Use the reference returned by push() to set data
+          set(newRequestRef, requestData)
+            .then(() => {
+              Alert.alert("Request Sent", "Your request to judge the project has been sent. Please wait for admin approval.");
+            })
+            .catch((error) => {
+              Alert.alert("Error", "There was a problem sending your request. Please try again.");
+              console.error("Error writing request to Firebase: ", error);
+            });
+  
+        } else {
+          Alert.alert("Error", "Judge profile not found.");
+        }
+      }).catch((error) => {
+        Alert.alert("Error", "Could not retrieve judge profile.");
+        console.error("Error fetching judge profile from Firebase: ", error);
+      });
+  
+    } else {
+      Alert.alert("Not Authenticated", "You must be logged in to make a request.");
+    }
+  };
+  
+    
 
     const safeDateFormat = (dateStr) => {
         const date = parseISO(dateStr);
