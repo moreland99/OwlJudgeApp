@@ -4,7 +4,7 @@ import { Card, Title, Paragraph, Button } from 'react-native-paper';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getDatabase, ref, get } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
-import { format, parseISO, isAfter } from 'date-fns'; // Import isAfter for date comparison
+import { format, parseISO, isAfter } from 'date-fns';
 import LogoutButton from '../components/LogoutButton';
 import CustomTheme from '../../theme';
 
