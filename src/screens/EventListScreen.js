@@ -6,6 +6,7 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase, ref, get } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
+import { parseISO, isAfter, compareAsc, format } from 'date-fns'; // Ensure you have 'date-fns' installed for date operations
 
 const EventListScreen = ({ navigation }) => {
   const [events, setEvents] = useState([]);
@@ -13,26 +14,32 @@ const EventListScreen = ({ navigation }) => {
   const auth = getAuth();
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (user) {
-      const eventsRef = ref(getDatabase(app), 'events');
-      get(eventsRef).then(snapshot => {
-        if (snapshot.exists()) {
-          // Assume the events are stored directly under 'events' node without any additional nesting
-          const loadedEvents = Object.keys(snapshot.val()).map(key => ({
-            id: key,
-            ...snapshot.val()[key]
-          }));
-          setEvents(loadedEvents); // Set the loaded events into state
-        } else {
-          console.log('No events found.'); // Log if no events are found
-        }
-      }).catch(error => {
-        console.error('Error fetching events:', error); // Log any error that occurs during fetching
-      });
-    } else {
-      console.log('No user logged in.'); // Log if no user is logged in
-    }
+    const today = new Date(); // Today's date object for comparison
+    const eventsRef = ref(getDatabase(app), 'events');
+    get(eventsRef).then(snapshot => {
+      if (snapshot.exists()) {
+        let loadedEvents = [];
+        snapshot.forEach(childSnapshot => {
+          const eventData = childSnapshot.val();
+          // Parse the endDate from ISO and compare
+          const eventEndDate = parseISO(eventData.endDate);
+          if (isAfter(eventEndDate, today)) { // Only include events where the end date is after today
+            loadedEvents.push({
+              id: childSnapshot.key,
+              ...eventData,
+            });
+          }
+        });
+        // Sort events by start date in ascending order
+        loadedEvents.sort((a, b) => compareAsc(parseISO(a.startDate), parseISO(b.startDate)));
+        setEvents(loadedEvents); // Set the sorted events into state
+      } else {
+        console.log('No events found.');
+        setEvents([]); // If no events found, set the events state to an empty array
+      }
+    }).catch(error => {
+      console.error('Error fetching events:', error);
+    });
   }, []);
 
   const renderItem = ({ item }) => (
@@ -42,7 +49,14 @@ const EventListScreen = ({ navigation }) => {
       <Card style={[styles.item, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
           <Title style={{ color: theme.colors.onSurface }}>{item.name}</Title>
-          <Paragraph>{item.date}</Paragraph>
+          <Paragraph>
+            {item.startDate === item.endDate ?
+              `On: ${format(parseISO(item.startDate), 'PPPP')}` :
+              `From: ${format(parseISO(item.startDate), 'PPPP')} To: ${format(parseISO(item.endDate), 'PPPP')}`}
+          </Paragraph>
+          <Paragraph>
+            Time: {format(parseISO(item.startTime), 'p')} - {format(parseISO(item.endTime), 'p')}
+          </Paragraph>
         </Card.Content>
       </Card>
     </TouchableOpacity>
@@ -50,12 +64,12 @@ const EventListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LogoComponent />
+      <LogoComponent /> 
       <FlatList
-        data={events}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-      />
+  data={events}
+  renderItem={renderItem}
+  keyExtractor={item => item.id}
+/>
     </View>
   );
 };

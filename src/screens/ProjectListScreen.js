@@ -1,81 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { Button, Card, Title, Paragraph } from 'react-native-paper';
-import LogoComponent from '../components/LogoComponent';
+import { View, SectionList, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { Card, Title, Paragraph } from 'react-native-paper';
 import { getAuth } from 'firebase/auth';
 import { getDatabase, ref, get } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
 const ProjectListScreen = ({ navigation }) => {
-  const [projects, setProjects] = useState([]); // State to hold fetched projects
-  const theme = CustomTheme;
+  const [projectSections, setProjectSections] = useState([{ title: 'Scored Projects', data: [] }, { title: 'Unscored Projects', data: [] }]);
   const auth = getAuth();
+  const db = getDatabase(app);
 
   useEffect(() => {
-    const db = getDatabase(app);
-    const user = auth.currentUser; 
-  
+    const user = auth.currentUser;
     if (user) {
-      const assignedProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
-      get(assignedProjectsRef).then(snapshot => {
-        if (snapshot.exists()) { 
+      const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
+      get(judgeProjectsRef).then(snapshot => {
+        if (snapshot.exists()) {
           const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
-          console.log('Project IDs:', projectIDs);
-  
-          const projectDetailsPromises = projectIDs.map(id => get(ref(db, `projects/${id}`)));
-  
-          Promise.all(projectDetailsPromises).then(projectSnapshots => {
-            const projects = projectSnapshots.map(snap => {
-              if (snap.exists()) {
-                return {
-                  id: snap.key,
-                  ...snap.val(),
-                };
-              } else {
-                console.log(`No data available for project ID: ${snap.key}`);
-                return {
-                  id: snap.key,
-                  title: 'Title Not Available',
-                  summary: 'Summary Not Available',
-                };
+          const projectDetailsPromises = projectIDs.map(id => 
+            get(ref(db, `projects/${id}`)).then(projectSnapshot => {
+              if (projectSnapshot.exists()) {
+                return get(ref(db, `scores/${id}/${user.uid}`)).then(scoreSnapshot => {
+                  return {
+                    id: id,
+                    ...projectSnapshot.val(),
+                    score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
+                  };
+                });
               }
-            });
-  
-            console.log('Fetched Projects:', projects);
-            setProjects(projects);
+            })
+          );
+
+          Promise.all(projectDetailsPromises).then(projects => {
+            const scoredProjects = projects.filter(p => p.score !== undefined);
+            const unscoredProjects = projects.filter(p => p.score === undefined);
+            setProjectSections([
+              { title: 'Scored Projects', data: scoredProjects },
+              { title: 'Unscored Projects', data: unscoredProjects }
+            ]);
           });
         } else {
           console.log('No projects are assigned to this judge.');
         }
-      }).catch(error => {
-        console.error('Error fetching assigned projects:', error);
       });
-    } else {
-      console.log('No user is logged in.'); 
     }
   }, []);
 
-  const renderItem = ({ item }) => (
+  const renderProject = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('ProjectDetails', { projectId: item.id })}
+      onPress={() => {
+        if (!item.score) {
+          navigation.navigate('ScoringScreen', { projectId: item.id });
+        }
+      }}
+      disabled={!!item.score}
+      style={{ opacity: item.score ? 0.7 : 1 }}
     >
-      <Card style={[styles.item, { backgroundColor: theme.colors.surface }]}>
+      <Card style={[styles.item, { backgroundColor: CustomTheme.colors.surface }]}>
         <Card.Content>
-          <Title style={{ color: theme.colors.onSurface }}>{item.title}</Title>
+          <Title style={{ color: CustomTheme.colors.onSurface }}>{item.title}</Title>
           <Paragraph>{item.summary}</Paragraph>
+          {item.score && <Text>Score: {item.score}</Text>}
         </Card.Content>
       </Card>
     </TouchableOpacity>
   );
+  
+
+  const renderSectionHeader = ({ section: { title } }) => (
+    <Text style={styles.header}>{title}</Text>
+  );
 
   return (
     <View style={styles.container}>
-    <LogoComponent />
-      <FlatList
-        data={projects}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
+      <SectionList
+        sections={projectSections}
+        keyExtractor={(item, index) => item.id + index}
+        renderItem={renderProject}
+        renderSectionHeader={renderSectionHeader}
       />
     </View>
   );
@@ -91,7 +94,15 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
   },
+  header: {
+    fontSize: 18,
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    color: '#000',
+    fontWeight: 'bold',
+  },
 });
 
 export default ProjectListScreen;
+
 

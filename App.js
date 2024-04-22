@@ -27,6 +27,7 @@ import EventDetailsScreen from './src/screens/EventDetailsScreen';
 import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
 import ProjectListScreen from './src/screens/ProjectListScreen';
+import JudgeProjectsScreen from './src/screens/JudgeProjectsScreen';
 
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const EventStack = createNativeStackNavigator();
@@ -43,10 +44,12 @@ const AuthStack = () => (
 // Event Stack for nested navigation within the Events tab
 const EventStackNavigator = () => (
   <EventStack.Navigator>
-    <EventStack.Screen name="EventList" component={EventListScreen} options={{ title: 'Assigned Events' }} />
+    <EventStack.Screen name="EventList" component={EventListScreen} options={{ title: 'All Events' }} />
     <EventStack.Screen name="EventDetails" component={EventDetailsScreen} options={{ title: 'Event Details' }} />
     <EventStack.Screen name="JudgeListScreen" component={JudgeListScreen} options={{ title: 'Judges' }} />
     <EventStack.Screen name="ScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
+    <EventStack.Screen name="JudgeProjectsScreen" component={JudgeProjectsScreen} options={{ title: 'Projects for Event' }} />
+    <EventStack.Screen name="AddEvent" component={EventAddScreen} options={{ title: 'Add Event' }} />
   </EventStack.Navigator>
 );
 

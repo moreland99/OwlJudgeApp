@@ -1,180 +1,136 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Alert, StyleSheet } from 'react-native';
-import { Button, Card, Title, Paragraph, TextInput, useTheme, Searchbar, Modal, Portal, Provider } from 'react-native-paper';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Text, TextInput, Alert } from 'react-native';
+import { Button, Card, Title, Paragraph, useTheme, Modal } from 'react-native-paper';
 import { getDatabase, ref, onValue, remove, update } from 'firebase/database';
-import CustomTheme from '../../theme';
-import { app } from '../firebase/firebaseConfig';
+import EditJudgeForm from './EditJudgeForm';
 
-const JudgeListScreen = ({ navigation }) => {
+const JudgeListScreen = ({ navigation }) => { 
   const [judges, setJudges] = useState([]);
-  const [filteredJudges, setFilteredJudges] = useState([]);
-  const theme = CustomTheme;
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentJudge, setCurrentJudge] = useState(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
-    if (route.params?.eventId) {
-      // Fetch projects for the given event ID
-      const eventProjectsRef = ref(db, `events/${route.params.eventId}/projects`);
-      get(eventProjectsRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const projects = Object.values(snapshot.val());
-          setProjects(projects);
-        }
-      });
-    }
-  }, [route.params?.eventId]);  
+    const db = getDatabase();
+    const judgesRef = ref(db, 'judges/');
+    onValue(judgesRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedJudges = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+      setJudges(loadedJudges);
+    });
+  }, []);
 
-  const onChangeSearch = query => {
-    setSearchQuery(query);
-    setFilteredJudges(judges.filter(item => item.judgeName.toLowerCase().includes(query.toLowerCase())));
-  };
-
-  const deleteJudge = judgeId => {
-    Alert.alert("Delete Judge", "Are you sure?", [
-      { text: "Cancel" },
-      { text: "OK", onPress: () => {
-          remove(ref(getDatabase(app), `judges/${judgeId}`))
-            .then(() => Alert.alert("Success", "Judge deleted successfully."))
-            .catch(error => Alert.alert("Error deleting judge", error.message));
-        }
-      },
-    ]);
-  };
-
-  const updateJudgeDetails = async () => {
-    if (currentJudge && currentJudge.id) {
-      const updates = {};
-      updates[`/judges/${currentJudge.id}`] = currentJudge;
-
-      try {
-        await update(ref(getDatabase(app)), updates);
-        Alert.alert("Success", "Judge details updated successfully.");
-        closeEditModal();
-      } catch (error) {
-        Alert.alert("Error updating judge", error.message);
-      }
-    }
-  };
-
-  const openEditModal = judge => {
+  // Function to trigger judge edit modal
+  const editJudge = (judge) => {
     setCurrentJudge(judge);
-    setIsModalVisible(true);
+    setIsEditModalVisible(true);
   };
 
-  const closeEditModal = () => {
-    setIsModalVisible(false);
+  // Function to delete a judge
+  const deleteJudge = (judgeId) => {
+    const db = getDatabase();
+    const judgeRef = ref(db, `judges/${judgeId}`);
+    remove(judgeRef)
+      .then(() => {
+        // Update local state after successful deletion
+        setJudges(judges.filter(judge => judge.id !== judgeId));
+      })
+      .catch(error => console.error("Error deleting judge:", error));
   };
 
-  const renderItem = ({ item }) => (
-    <Card style={styles.card}>
-      <Card.Content>
-        <Title>{item.judgeName}</Title>
-        <Paragraph>Expertise: {item.expertise ? item.expertise.area : 'N/A'}</Paragraph>
-        <Paragraph>Contact: Email: {item.contact?.email || 'N/A'}, Phone: {item.contact?.phoneNumber || 'N/A'}</Paragraph>
-        <Paragraph>Availability: {item.availability ? item.availability.toString() : 'N/A'}</Paragraph>
-      </Card.Content>
-      <Card.Actions>
-        <Button onPress={() => openEditModal(item)}>Edit</Button>
-        <Button onPress={() => deleteJudge(item.id)}>Delete</Button>
-      </Card.Actions>
-    </Card>
+  // Function to confirm before deleting a judge
+const confirmDeleteJudge = (judgeId) => {
+  Alert.alert(
+    "Confirm Delete",
+    "Are you sure you want to delete this judge?",
+    [
+      // The "Yes" button
+      {
+        text: "Yes",
+        onPress: () => deleteJudge(judgeId),
+      },
+      // The "No" button
+      // Does nothing but dismiss the dialog when pressed
+      {
+        text: "No",
+      },
+    ],
   );
+};
 
-  const styles = getStyles(theme);
+  // Function to update judge details
+  const handleUpdateJudge = (updatedJudge) => {
+    const db = getDatabase();
+    const judgeRef = ref(db, `judges/${updatedJudge.id}`);
+    update(judgeRef, updatedJudge)
+      .then(() => {
+        const updatedJudges = judges.map(judge => {
+          return judge.id === updatedJudge.id ? updatedJudge : judge;
+        });
+        setJudges(updatedJudges);
+        setIsEditModalVisible(false); // Close modal after update
+      })
+      .catch(error => {
+        console.error("Error updating judge details:", error);
+      });
+  };
+  
 
   return (
-    <Provider>
-      <View style={styles.container}>
-        <Searchbar
-          placeholder="Search Judges"
-          onChangeText={onChangeSearch}
-          value={searchQuery}
-          style={styles.searchbar}
-        />
-        <FlatList
-          data={filteredJudges}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-        />
-        <Portal>
-          <Modal visible={isModalVisible} onDismiss={closeEditModal} contentContainerStyle={styles.modalContainer}>
-            <Card>
-              <Card.Title title="Edit Judge Details" />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView style={styles.scrollView}>
+        {judges.map((judge) => (
+          <TouchableOpacity key={judge.id} onPress={() => editJudge(judge)}>
+            <Card style={styles.card}>
               <Card.Content>
-                <TextInput
-                  label="Name"
-                  value={currentJudge ? currentJudge.judgeName : ''}
-                  onChangeText={text => setCurrentJudge({ ...currentJudge, judgeName: text })}
-                  style={styles.input}
-                />
-                <TextInput
-                  label="Expertise"
-                  value={currentJudge ? currentJudge.expertise : ''}
-                  onChangeText={text => setCurrentJudge({ ...currentJudge, expertise: text })}
-                  style={styles.input}
-                />
-                <TextInput
-                  label="Contact"
-                  value={currentJudge ? `Email: ${currentJudge.contact?.email || ''}, Phone: ${currentJudge.contact?.phoneNumber || ''}` : ''}
-                  onChangeText={text => {
-                    const [email, phone] = text.split(', ');
-                    setCurrentJudge({
-                      ...currentJudge,
-                      contact: {
-                        email: email.split(': ')[1],
-                        phoneNumber: phone.split(': ')[1]
-                      }
-                    });
-                  }}
-                  style={styles.input}
-                />
-                <TextInput
-                  label="Availability"
-                  value={currentJudge ? currentJudge.availability.toString() : ''}
-                  onChangeText={text => setCurrentJudge({ ...currentJudge, availability: text })}
-                  style={styles.input}
-                />
+                <Title>{judge.firstName} {judge.lastName}</Title>
+                <Paragraph>Email: {judge.email}</Paragraph>
+                <Paragraph>Role: {judge.role}</Paragraph>
               </Card.Content>
               <Card.Actions>
-                <Button onPress={closeEditModal}>Cancel</Button>
-                <Button onPress={updateJudgeDetails}>Save</Button>
+                <Button onPress={() => editJudge(judge)}>Edit</Button>
+                <Button onPress={() => confirmDeleteJudge(judge.id)}>Delete</Button>
               </Card.Actions>
             </Card>
-          </Modal>
-        </Portal>
-      </View>
-    </Provider>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      <Modal visible={isEditModalVisible} onDismiss={() => setIsEditModalVisible(false)}>
+        <EditJudgeForm
+          isVisible={isEditModalVisible}
+          onClose={() => setIsEditModalVisible(false)}
+          judge={currentJudge}
+          onSave={handleUpdateJudge}
+        />
+      </Modal>
+    </View>
   );
+  
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: CustomTheme.colors.background, // Assuming CustomTheme has a 'colors' object
+  },
+  scrollView: {
+    marginHorizontal: 20,
   },
   card: {
-    margin: 8,
-    padding: 8,
-    backgroundColor: CustomTheme.colors.surface,
-  },
-  searchbar: {
-    margin: 8,
-    borderRadius: 2,
-    elevation: 1,
-    backgroundColor: CustomTheme.colors.surface,
+    marginVertical: 8,
+    padding: 10,
+    borderRadius: 8,
+    elevation: 4,
   },
   modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'white',
     padding: 20,
     marginLeft: 20,
     marginRight: 20,
   },
-  input: {
-    backgroundColor: CustomTheme.colors.surface,
-    marginBottom: 10,
-  }
 });
 
 export default JudgeListScreen;
+
