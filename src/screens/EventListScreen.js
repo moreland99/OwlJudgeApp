@@ -3,7 +3,7 @@ import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, Card, Title, Paragraph, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
@@ -50,7 +50,7 @@ const EventListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LogoComponent />
+    <LogoComponent />
       <FlatList
         data={events}
         renderItem={renderItem}
