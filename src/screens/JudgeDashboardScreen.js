@@ -6,6 +6,7 @@ import { getDatabase, ref, get } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import { format, parseISO, isAfter } from 'date-fns';
 import LogoutButton from '../components/LogoutButton';
+import LogoComponent from '../components/LogoComponent';
 import CustomTheme from '../../theme';
 
 const JudgeDashboardScreen = () => {
@@ -95,6 +96,7 @@ const JudgeDashboardScreen = () => {
     return (
       <View style={styles.container}>
         <LogoutButton />
+        <LogoComponent />
         <Text style={styles.welcomeText}>{greetUser()}</Text>
         <Text style={styles.header}>Upcoming Events</Text>
         <FlatList
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
   },
   card: {
     margin: CustomTheme.spacing(1),
-    width: 300,
+    width: '90%',
     borderRadius: 8,
     elevation: 3,
   },
