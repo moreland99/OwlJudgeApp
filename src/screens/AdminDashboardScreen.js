@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import { Button, Card, useTheme, Modal, Portal, List, Badge, IconButton } from 'react-native-paper';
+import { Button, Card, Modal, Portal, List, Badge, IconButton } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
@@ -16,9 +16,6 @@ const AdminDashboardScreen = ({ navigation }) => {
   const [selectedJudgeId, setSelectedJudgeId] = useState(null);
   const [judgeRequests, setJudgeRequests] = useState([]);
   const [showAllRequests, setShowAllRequests] = useState(false);
-  
-  const CustomTheme = useTheme();
-  const styles = getDynamicStyles(CustomTheme);
 
   const [notificationsCount, setNotificationsCount] = useState(0); // To keep track of the number of notifications
 
@@ -92,14 +89,6 @@ const AdminDashboardScreen = ({ navigation }) => {
 });
 }, [showAllRequests]); // Re-run the effect when showAllRequests changes
 
-
-
-
-  const openModal = () => setModalVisible(true);
-  const closeModal = () => setModalVisible(false);
-  const handleSelectEvent = (eventId) => setSelectedEventId(eventId);
-  const handleSelectJudge = (judgeId) => setSelectedJudgeId(judgeId);
-
   const toggleRequestView = () => {
     setShowAllRequests(!showAllRequests);
   };
@@ -117,7 +106,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           <QuickLinkButton title=" Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeList')} styles={styles} />
           <QuickLinkButton title=" Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('ProjectSubmission')} styles={styles} />
           <QuickLinkButton title=" Scoring" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
-          <QuickLinkButton title=" Add Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
+          <QuickLinkButton title=" Assign" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
 
         <Button
@@ -166,7 +155,7 @@ const AdminDashboardScreen = ({ navigation }) => {
 };
 
 
-const getDynamicStyles = () => StyleSheet.create({
+const styles = StyleSheet.create({
   fullscreen: {
     flex: 1,
     backgroundColor: CustomTheme.colors.background,
@@ -179,12 +168,13 @@ const getDynamicStyles = () => StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
+    
   },
   quickLinkCard: {
     width: '48%',
-    margin: 2,
-    padding: 10,
-    alignItems: 'center',
+    margin: 0,
+    padding: 6,
+    //alignItems: 'center',
     backgroundColor: CustomTheme.colors.surface,
   },
   card: {
