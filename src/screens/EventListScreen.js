@@ -15,25 +15,37 @@ const EventListScreen = ({ navigation }) => {
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
-      const eventsRef = ref(getDatabase(app), 'events');
-      get(eventsRef).then(snapshot => {
+      // Reference to the assigned events for the logged-in judge
+      const assignedEventsRef = ref(getDatabase(app), `judges/${user.uid}/assignedEvents`);
+      get(assignedEventsRef).then(snapshot => {
         if (snapshot.exists()) {
-          // Assume the events are stored directly under 'events' node without any additional nesting
-          const loadedEvents = Object.keys(snapshot.val()).map(key => ({
-            id: key,
-            ...snapshot.val()[key]
-          }));
-          setEvents(loadedEvents); // Set the loaded events into state
+          // Get the event IDs from the snapshot
+          const eventIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
+          
+          // Fetch details for each event ID
+          const eventDetailsPromises = eventIDs.map(eventId =>
+            get(ref(getDatabase(app), `events/${eventId}`))
+          );
+          
+          Promise.all(eventDetailsPromises).then(eventSnapshots => {
+            const loadedEvents = eventSnapshots.map(snap => ({
+              id: snap.key,
+              ...snap.val(),
+            }));
+            setEvents(loadedEvents); // Set the loaded events into state
+          });
         } else {
-          console.log('No events found.'); // Log if no events are found
+          console.log('No assigned events found.');
+          setEvents([]); // If no events are assigned, set the events state to an empty array
         }
       }).catch(error => {
-        console.error('Error fetching events:', error); // Log any error that occurs during fetching
+        console.error('Error fetching assigned events:', error);
       });
     } else {
-      console.log('No user logged in.'); // Log if no user is logged in
+      console.log('No user logged in.');
     }
   }, []);
+  
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
