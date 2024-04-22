@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Button, TextInput, Text, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { getDatabase, ref, push, onValue, set } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 
 const ProjectSubmissionScreen = ({ navigation }) => {
   const theme = useTheme();
+  const [teamMembers, setTeamMembers] = useState('');
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [events, setEvents] = useState([]);
@@ -35,16 +36,17 @@ const ProjectSubmissionScreen = ({ navigation }) => {
   const handleSubmit = () => {
     const database = getDatabase(app);
     const projectsRef = ref(database, 'projects');
-    const newProjectRef = push(projectsRef);
-
+    const newProjectRef = push(projectsRef); // This generates a new unique key for the project
+  
     const newProject = {
       id: newProjectRef.key,
+      teamMembers,
       title,
       summary,
       event: selectedEvent
     };
-
-    push(newProjectRef, newProject)
+  
+    set(newProjectRef, newProject) // Use 'set' instead of 'push' to set the project data
       .then(() => {
         alert('Project submitted successfully with ID ' + newProjectRef.key + '!');
         navigation.goBack();
@@ -53,9 +55,11 @@ const ProjectSubmissionScreen = ({ navigation }) => {
         alert("Failed to submit project: " + error.message);
       });
   };
+  
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, {backgroundColor: theme.colors.background}]}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <LogoComponent />
       <Text style={[styles.title, {color: theme.colors.text}]}>Submit Your Project</Text>
       <Picker
@@ -67,6 +71,15 @@ const ProjectSubmissionScreen = ({ navigation }) => {
           <Picker.Item key={event.id} label={event.name} value={event.id} />
         ))}
       </Picker>
+      <TextInput
+        mode="outlined"
+        label="Team Members"
+        placeholder="Enter team members separated by commas"
+        value={teamMembers}
+        onChangeText={setTeamMembers}
+        style={styles.input}
+        theme={{ colors: { primary: theme.colors.primary }}}
+      />
       <TextInput
         mode="outlined"
         label="Project Title"
@@ -92,6 +105,7 @@ const ProjectSubmissionScreen = ({ navigation }) => {
         Submit Project
       </Button>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

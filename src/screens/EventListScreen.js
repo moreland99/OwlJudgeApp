@@ -3,7 +3,7 @@ import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, Card, Title, Paragraph, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get, onValue } from 'firebase/database';
+import { getDatabase, ref, get } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
@@ -15,19 +15,23 @@ const EventListScreen = ({ navigation }) => {
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
-      const judgeProfileRef = ref(getDatabase(app), `judges/${user.uid}/assignedEvents`);
-      get(judgeProfileRef).then((snapshot) => {
+      const eventsRef = ref(getDatabase(app), 'events');
+      get(eventsRef).then(snapshot => {
         if (snapshot.exists()) {
-          const assignedEventIds = snapshot.val();
-          const eventsFetchPromises = assignedEventIds.map(eventId =>
-            get(ref(getDatabase(app), `events/${eventId}`))
-          );
-          Promise.all(eventsFetchPromises).then(eventSnapshots => {
-            const assignedEvents = eventSnapshots.map(snap => ({ ...snap.val(), id: snap.key }));
-            setEvents(assignedEvents);
-          });
+          // Assume the events are stored directly under 'events' node without any additional nesting
+          const loadedEvents = Object.keys(snapshot.val()).map(key => ({
+            id: key,
+            ...snapshot.val()[key]
+          }));
+          setEvents(loadedEvents); // Set the loaded events into state
+        } else {
+          console.log('No events found.'); // Log if no events are found
         }
+      }).catch(error => {
+        console.error('Error fetching events:', error); // Log any error that occurs during fetching
       });
+    } else {
+      console.log('No user logged in.'); // Log if no user is logged in
     }
   }, []);
 
@@ -46,7 +50,7 @@ const EventListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-    <LogoComponent />
+      <LogoComponent />
       <FlatList
         data={events}
         renderItem={renderItem}
