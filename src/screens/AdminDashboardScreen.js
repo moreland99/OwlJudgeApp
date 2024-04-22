@@ -77,8 +77,8 @@ const AdminDashboardScreen = ({ navigation }) => {
         </View>
         <View style={styles.quickLinksContainer}>
           <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
-          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeListScreen')} styles={styles} />
-          <QuickLinkButton title="View Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('Project Submission')} styles={styles} />
+          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeList')} styles={styles} />
+          <QuickLinkButton title="View Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('ProjectSubmission')} styles={styles} />
           <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
           <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
