@@ -95,7 +95,11 @@ const confirmDeleteJudge = (judgeId) => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <Modal visible={isEditModalVisible} onDismiss={() => setIsEditModalVisible(false)}>
+      <Modal
+        visible={isEditModalVisible}
+        onDismiss={() => setIsEditModalVisible(false)}
+        contentContainerStyle={styles.modalContainer}
+      >
         <EditJudgeForm
           isVisible={isEditModalVisible}
           onClose={() => setIsEditModalVisible(false)}
@@ -112,7 +116,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   scrollView: {
     marginHorizontal: 20,
