@@ -1,10 +1,12 @@
 // EventEditForm.js
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, TextInput, Card, useTheme } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
 import LogoComponent from '../components/LogoComponent';
 import Modal from 'react-native-modal'; // Import from react-native-modal
+import { database} from '../firebase/firebaseConfig';
+import { ref, update } from 'firebase/database';
 
 const EventEditForm = ({ event, onClose }) => {
   const theme = useTheme();
@@ -19,8 +21,7 @@ const EventEditForm = ({ event, onClose }) => {
   const [openTimePickerEnd, setOpenTimePickerEnd] = useState(false);
 
   const handleEditEvent = () => {
-    const db = getDatabase();
-    const eventRef = ref(db, `events/${event.id}`);
+    const eventRef = ref(database, `events/${event.id}`);
     update(eventRef, {
       name: eventName,
       startDate: startDate.toISOString(),
@@ -43,6 +44,10 @@ const EventEditForm = ({ event, onClose }) => {
       backdropOpacity={0.3} //Dim the background to focus on the modal
       style={styles.modal}
     >
+    <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"} 
+        style={styles.keyboardView}
+      >
       <View style={styles.modalContent}>
         <View style={styles.handleIndicator} />
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -129,6 +134,7 @@ const EventEditForm = ({ event, onClose }) => {
       </Card>
     </ScrollView>
     </View>
+    </KeyboardAvoidingView>
     </Modal>
   );
 };
