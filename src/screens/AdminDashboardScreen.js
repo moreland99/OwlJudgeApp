@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import { Button, Card, useTheme, Modal, Portal, List } from 'react-native-paper';
+import { Button, Card, useTheme, Modal, Portal, List, Badge, IconButton } from 'react-native-paper';
 import { getDatabase, ref, onValue } from 'firebase/database';
-import { useNavigation } from '@react-navigation/native';
-import { assignJudgeToEvent } from '../firebase/firebaseOperations';
 import { app } from '../firebase/firebaseConfig';
 
 const AdminDashboardScreen = ({ navigation }) => {
@@ -15,16 +13,21 @@ const AdminDashboardScreen = ({ navigation }) => {
   const [judgesList, setJudgesList] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedJudgeId, setSelectedJudgeId] = useState(null);
+  const [judgeRequests, setJudgeRequests] = useState([]);
   
   const theme = useTheme();
   const styles = getDynamicStyles(theme);
 
+  const [notificationsCount, setNotificationsCount] = useState(0); // To keep track of the number of notifications
+
   useEffect(() => {
-    const db = getDatabase();
+    const db = getDatabase(app);
     const eventListRef = ref(db, 'events/');
     const judgeListRef = ref(db, 'judges/');
-    const projectListRef = ref(db, 'projects/');
+    const projectListRef = ref(db, 'projects/'); 
 
+
+    // Fetch Events
     onValue(eventListRef, (snapshot) => {
       const events = [];
       snapshot.forEach((childSnapshot) => {
@@ -37,6 +40,7 @@ const AdminDashboardScreen = ({ navigation }) => {
       setEventCount(events.length);
     });
 
+    // Fetch Judges
     onValue(judgeListRef, (snapshot) => {
       const judges = [];
       snapshot.forEach((childSnapshot) => {
@@ -49,8 +53,8 @@ const AdminDashboardScreen = ({ navigation }) => {
       setJudgeCount(judges.length);
     });
 
+    //Fetch Projects
     onValue(projectListRef, (snapshot) => {
-      // Logic to handle the project count
       const projects = [];
       snapshot.forEach((childSnapshot) => {
         projects.push({
@@ -60,7 +64,28 @@ const AdminDashboardScreen = ({ navigation }) => {
       });
       setProjectCount(projects.length); // Set the project count based on the number of projects
     });
-  }, []);
+
+ // Fetch Judge Requests
+ const requestsRef = ref(db, 'judgeRequests');
+ onValue(requestsRef, (snapshot) => {
+   const requests = [];
+   snapshot.forEach((requestSnapshot) => {
+     const requestId = requestSnapshot.key;
+     const request = requestSnapshot.val();
+     requests.push({
+       id: requestId,
+       ...request
+     });
+   });
+   setJudgeRequests(requests);
+   setNotificationsCount(requests.length); // Update the notifications count
+ }, (error) => {
+   console.error("Firebase onValue error: ", error);
+ });
+}, []);
+
+
+
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => setModalVisible(false);
@@ -70,10 +95,10 @@ const AdminDashboardScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.fullscreen}>
       <View style={styles.container}>
-      <View style={styles.statsContainer}>
-        <StatCard label="Total Events" count={eventCount} styles={styles} />
-        <StatCard label="Total Projects" count={projectCount} styles={styles} />
-        <StatCard label="Total Judges" count={judgeCount} styles={styles} />
+        <View style={styles.statsContainer}>
+          <StatCard label="Total Events" count={eventCount} styles={styles} />
+          <StatCard label="Total Projects" count={projectCount} styles={styles} />
+          <StatCard label="Total Judges" count={judgeCount} styles={styles} />
         </View>
         <View style={styles.quickLinksContainer}>
           <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
@@ -82,30 +107,35 @@ const AdminDashboardScreen = ({ navigation }) => {
           <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
           <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
+  
+        {/* Notifications Section */}
+        {judgeRequests.length > 0 && (
+          <>
+            <Text style={styles.notificationsHeader}>Notifications</Text>
+            {judgeRequests.map((request) => (
+              <Card key={request.id} style={styles.notificationCard}>
+                <Card.Title
+                  title={`Judge Request: ${request.judgeName || "Unknown"}`}
+                  subtitle={`Project: ${request.projectTitle}`}
+                  left={(props) => <List.Icon {...props} icon="bell-ring" color={theme.colors.notification} />}
+                  right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>}
+                />
+                <Card.Actions>
+                  <Button onPress={() => navigation.navigate('JudgeDetails', { judgeId: request.judgeId })}>View Details</Button>
+                </Card.Actions>
+              </Card>
+            ))}
+          </>
+        )}
       </View>
       <Portal>
         <Modal visible={isModalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
-          <Card>
-            <Card.Title title="Assign Judge to Event" />
-            <Card.Content>
-              <List.Accordion title="Select Event" expanded={selectedEventId !== null}>
-                {eventsList.map(event => (
-                  <List.Item key={event.id} title={event.name} onPress={() => handleSelectEvent(event.id)} />
-                ))}
-              </List.Accordion>
-              <List.Accordion title="Select Judge" expanded={selectedJudgeId !== null}>
-                {judgesList.map(judge => (
-                  <List.Item key={judge.id} title={judge.email} onPress={() => handleSelectJudge(judge.id)} />
-                ))}
-              </List.Accordion>
-            </Card.Content>
-            <Card.Actions>
-            </Card.Actions>
-          </Card>
+          {/* ... Modal content ... */}
         </Modal>
       </Portal>
     </ScrollView>
   );
+  
 };
 
 const getDynamicStyles = (theme) => StyleSheet.create({
@@ -162,6 +192,24 @@ const getDynamicStyles = (theme) => StyleSheet.create({
     padding: 20,
     margin: 20,
   },
+  notificationsHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+    color: theme.colors.primary,
+    paddingLeft: 10,
+  },
+  notificationCard: {
+    marginVertical: 5,
+    marginHorizontal: 10,
+    borderColor: theme.colors.notification,
+    borderWidth: 1, // Adding a border to highlight the notification card
+  },
+  badge: {
+    backgroundColor: theme.colors.accent, // Use accent color for the badge
+    color: 'white', // White text color for the badge
+  }
 });
 
 
