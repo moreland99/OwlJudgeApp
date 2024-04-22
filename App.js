@@ -49,6 +49,7 @@ const EventStackNavigator = () => (
     <EventStack.Screen name="JudgeListScreen" component={JudgeListScreen} options={{ title: 'Judges' }} />
     <EventStack.Screen name="ScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
     <EventStack.Screen name="JudgeProjectsScreen" component={JudgeProjectsScreen} options={{ title: 'Projects for Event' }} />
+    <EventStack.Screen name="AddEvent" component={EventAddScreen} options={{ title: 'Add Event' }} />
   </EventStack.Navigator>
 );
 

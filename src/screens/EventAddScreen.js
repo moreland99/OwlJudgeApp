@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Button, TextInput, Text, useTheme, Card, IconButton } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
 import LogoComponent from '../components/LogoComponent';
@@ -10,6 +11,7 @@ const EventAddScreen = ({ navigation }) => {
   const theme = useTheme();
   const [eventName, setEventName] = useState('');
   const [eventDetails, setEventDetails] = useState('');
+  const [location, setLocation] = useState('KSU Marietta');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
@@ -28,6 +30,7 @@ const EventAddScreen = ({ navigation }) => {
       id: newEventRef.key,
       name: eventName,
       details: eventDetails,
+      location: location,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       startTime: startTime.toISOString(),
@@ -42,6 +45,7 @@ const EventAddScreen = ({ navigation }) => {
       // Clear the form here
       setEventName('');
       setEventDetails('');
+      setLocation('KSU Marietta');
       setStartDate(new Date());
       setEndDate(new Date());
       setStartTime(new Date());
@@ -74,6 +78,15 @@ const EventAddScreen = ({ navigation }) => {
             onChangeText={setEventDetails}
             style={styles.input}
           />
+          <Text style={styles.label}>Select Location:</Text>
+          <Picker
+            selectedValue={location}
+            onValueChange={(itemValue) => setLocation(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="KSU Marietta" value="KSU Marietta" />
+            <Picker.Item label="KSU Campus" value="KSU Campus" />
+          </Picker>
           <Button icon="calendar" mode="outlined" onPress={() => setOpenStartDatePicker(true)} style={styles.button}>
             Pick Start Date
           </Button>
@@ -156,6 +169,14 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   input: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#000', // Adjust the color as needed
+  },
+  picker: {
     marginBottom: 16,
   },
   button: {
