@@ -18,19 +18,26 @@ const JudgeDashboardScreen = () => {
   const db = getDatabase();
   const auth = getAuth();
 
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (newUser) => {
       setUser(newUser);
       if (newUser) {
-        const judgeProfileRef = ref(db, `judges/${newUser.uid}/assignedEvents`);
+        const judgeProfileRef = ref(db, `judges/${newUser.uid}`);
         get(judgeProfileRef).then((snapshot) => {
           if (snapshot.exists()) {
-            const assignedEventIds = snapshot.val();
-            const eventsFetchPromises = assignedEventIds.map(eventId => get(ref(db, `events/${eventId}`)));
-            Promise.all(eventsFetchPromises).then(eventSnapshots => {
-              const allEvents = eventSnapshots.map(snap => ({ ...snap.val(), id: snap.key }));
-              const validEvents = allEvents.filter(event => isAfter(new Date(event.endDate), new Date()));
-              setAssignedEvents(allEvents);
+            const { assignedEvents } = snapshot.val();
+            const eventIDs = Object.keys(assignedEvents).filter(key => assignedEvents[key] === true);
+            const eventDetailsPromises = eventIDs.map(eventId =>
+              get(ref(db, `events/${eventId}`))
+            );
+            Promise.all(eventDetailsPromises).then(eventSnapshots => {
+              const loadedEvents = eventSnapshots.map(snap => ({
+                id: snap.key,
+                ...snap.val(),
+              }));
+              const validEvents = loadedEvents.filter(event => isAfter(new Date(event.endDate), new Date()));
+              setAssignedEvents(loadedEvents);
               setUpcomingEvents(validEvents);
             });
           } else {
@@ -39,9 +46,10 @@ const JudgeDashboardScreen = () => {
         });
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
+  
 
   const handleEventSelect = (event) => {
     setCurrentEvent(event);
@@ -69,18 +77,23 @@ const JudgeDashboardScreen = () => {
     </TouchableOpacity>
   );
 
+    // Sorting function to sort events by start date
+    const sortByStartDate = (eventA, eventB) => {
+      const startDateA = new Date(eventA.startDate);
+      const startDateB = new Date(eventB.startDate);
+      return startDateA - startDateB;
+    };
+
   return (
     <View style={styles.container}>
       <LogoutButton />
       <Text style={styles.welcomeText}>{`${greetUser()} ${user?.displayName || user?.email}`}</Text>
       <Text style={styles.header}>Upcoming Events</Text>
       <FlatList
-        data={upcomingEvents}
+        data={upcomingEvents.sort(sortByStartDate)}
         renderItem={renderEventCard}
         keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        horizontal={true} // Enable horizontal scrolling
-        style={styles.horizontalList}
+    
       />
       <Modal
         animationType="slide"
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
   modalTextTime: {
     marginBottom: 20,
     textAlign: 'center',
-  },
+  }, 
   welcomeText: {
     fontSize: 24, // Original larger size for greeting
     fontWeight: 'bold',
