@@ -15,7 +15,7 @@ import EventDashboardScreen from './src/screens/EventDashboardScreen';
 import JudgeDetailsScreen from './src/screens/JudgeDetailsScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
-import CreateAccount from './src/screens/CreateAccount';
+import CreateAccount from './src/screens/CreateAccount'; 
 import EventAddScreen from './src/screens/EventAddScreen';
 import JudgeListScreen from './src/screens/JudgeListScreen';
 import LogoutButton from './src/components/LogoutButton';
@@ -165,36 +165,44 @@ function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
     padding: 20,
   },
   textContent: {
-    alignItems: 'center',
-    marginHorizontal: 30, // Adjust this value to control the side margins
+    alignItems: "center",
+    marginBottom: 30,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#231F20',
+    fontWeight: "bold",
+    color: "#231F20",
     marginBottom: 20,
-    textAlign: 'center', // Ensures the text is centered
   },
   intro: {
-    textAlign: 'center',
-    color: '#231F20',
-    marginBottom: 30,
+    textAlign: "center",
+    color: "#231F20",
     fontSize: 16,
   },
   logo: {
     width: 200,
     height: 200,
-    resizeMode: 'contain',
+    resizeMode: "contain",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  buttonText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 
-
 export default App;
-
-

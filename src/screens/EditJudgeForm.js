@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 20,
     margin: 20,
+    minHeight: 500,
   },
   modalTitle: {
     fontSize: 20,
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    marginBottom: 10,
+    margin: 10,
   },
   saveButton: {
     marginTop: 10,
