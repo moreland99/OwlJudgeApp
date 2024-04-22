@@ -113,11 +113,11 @@ const AdminDashboardScreen = ({ navigation }) => {
           <StatCard label="Total Judges" count={judgeCount} styles={styles} />
         </View>
         <View style={styles.quickLinksContainer}>
-          <QuickLinkButton title="View Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
-          <QuickLinkButton title="View Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeList')} styles={styles} />
-          <QuickLinkButton title="View Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('ProjectSubmission')} styles={styles} />
-          <QuickLinkButton title="View Scores" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
-          <QuickLinkButton title="Assign Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
+          <QuickLinkButton title=" Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
+          <QuickLinkButton title=" Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeList')} styles={styles} />
+          <QuickLinkButton title=" Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('ProjectSubmission')} styles={styles} />
+          <QuickLinkButton title=" Scoring" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
+          <QuickLinkButton title=" Add Judges" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
 
         <Button
