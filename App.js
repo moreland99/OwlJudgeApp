@@ -20,6 +20,8 @@ import EventAddScreen from './src/screens/EventAddScreen';
 import JudgeListScreen from './src/screens/JudgeListScreen';
 import LogoutButton from './src/components/LogoutButton';
 import AssignJudgesScreen from './src/screens/AssignJudgesScreen';
+import EventEditForm from './src/screens/EventEditForm';
+
 // Screens specific to Judge
 import JudgeDashboardScreen from './src/screens/JudgeDashboardScreen';
 import EventListScreen from './src/screens/EventListScreen';
@@ -50,6 +52,8 @@ const EventStackNavigator = () => (
     <EventStack.Screen name="ScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
     <EventStack.Screen name="JudgeProjectsScreen" component={JudgeProjectsScreen} options={{ title: 'Projects for Event' }} />
     <EventStack.Screen name="AddEvent" component={EventAddScreen} options={{ title: 'Add Event' }} />
+    <EventStack.Screen name="EventEditForm" component={EventEditForm} />
+
   </EventStack.Navigator>
 );
 
@@ -61,6 +65,7 @@ const AdminStackNavigator = () => (
     <AdminStack.Screen name="ProjectSubmission" component={ProjectSubmissionScreen} />
     <AdminStack.Screen name="ScoringFeedback" component={ScoringScreen} />
     <AdminStack.Screen name="AssignJudges" component={AssignJudgesScreen} />
+
   </AdminStack.Navigator>
 );
 

@@ -1,13 +1,14 @@
-// EventEditForm.js
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, TextInput, Text, useTheme, Card } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
-import LogoComponent from '../components/LogoComponent'; // Adjust import path as necessary
 import { getDatabase, ref, update } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
 
 const EventEditForm = ({ event, onClose }) => {
   const theme = useTheme();
+  const navigation = useNavigation();
+
   const [eventName, setEventName] = useState(event.name);
   const [startDate, setStartDate] = useState(new Date(event.startDate));
   const [endDate, setEndDate] = useState(new Date(event.endDate));
@@ -37,7 +38,11 @@ const EventEditForm = ({ event, onClose }) => {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <LogoComponent />
+      <View style={styles.header}>
+        <Button icon="arrow-left" mode="outlined" onPress={() => navigation.goBack()} style={styles.backButton}>
+          Back to Admin Dashboard
+        </Button>
+      </View>
       <Card style={styles.card}>
         <Card.Content>
           <Text style={{ color: theme.colors.text, marginBottom: 20 }}>Edit Event</Text>
@@ -53,62 +58,18 @@ const EventEditForm = ({ event, onClose }) => {
           <Button icon="calendar" mode="outlined" onPress={() => setOpenStartDatePicker(true)} style={styles.button}>
             Pick Start Date
           </Button>
-          <DatePickerModal
-            locale="en-US"
-            mode="single"
-            visible={openStartDatePicker}
-            onDismiss={() => setOpenStartDatePicker(false)}
-            date={startDate}
-            onConfirm={(params) => {
-              setOpenStartDatePicker(false);
-              setStartDate(params.date);
-            }}
-          />
           {/* End Date Picker */}
           <Button icon="calendar" mode="outlined" onPress={() => setOpenEndDatePicker(true)} style={styles.button}>
             Pick End Date
           </Button>
-          <DatePickerModal
-            locale="en-US"
-            mode="single"
-            visible={openEndDatePicker}
-            onDismiss={() => setOpenEndDatePicker(false)}
-            date={endDate}
-            onConfirm={(params) => {
-              setOpenEndDatePicker(false);
-              setEndDate(params.date);
-            }}
-          />
           {/* Start Time Picker */}
           <Button icon="clock-outline" mode="outlined" onPress={() => setOpenTimePickerStart(true)} style={styles.button}>
             Pick Start Time
           </Button>
-          <TimePickerModal
-            locale="en-US"
-            visible={openTimePickerStart}
-            onDismiss={() => setOpenTimePickerStart(false)}
-            onConfirm={(params) => {
-              setOpenTimePickerStart(false);
-              setStartTime(new Date(0, 0, 0, params.hours, params.minutes));
-            }}
-            hours={startTime.getHours()} // default: current hours
-            minutes={startTime.getMinutes()} // default: current minutes
-          />
           {/* End Time Picker */}
           <Button icon="clock-outline" mode="outlined" onPress={() => setOpenTimePickerEnd(true)} style={styles.button}>
             Pick End Time
           </Button>
-          <TimePickerModal
-            locale="en-US"
-            visible={openTimePickerEnd}
-            onDismiss={() => setOpenTimePickerEnd(false)}
-            onConfirm={(params) => {
-              setOpenTimePickerEnd(false);
-              setEndTime(new Date(0, 0, 0, params.hours, params.minutes));
-            }}
-            hours={endTime.getHours()} // default: current hours
-            minutes={endTime.getMinutes()} // default: current minutes
-          />
           <Button 
             mode="contained" 
             onPress={handleEditEvent}
@@ -118,6 +79,51 @@ const EventEditForm = ({ event, onClose }) => {
           </Button>
         </Card.Content>
       </Card>
+      {/* Date & Time Pickers */}
+      <DatePickerModal
+        locale="en-US"
+        mode="single"
+        visible={openStartDatePicker}
+        onDismiss={() => setOpenStartDatePicker(false)}
+        date={startDate}
+        onConfirm={(params) => {
+          setOpenStartDatePicker(false);
+          setStartDate(params.date);
+        }}
+      />
+      <DatePickerModal
+        locale="en-US"
+        mode="single"
+        visible={openEndDatePicker}
+        onDismiss={() => setOpenEndDatePicker(false)}
+        date={endDate}
+        onConfirm={(params) => {
+          setOpenEndDatePicker(false);
+          setEndDate(params.date);
+        }}
+      />
+      <TimePickerModal
+        locale="en-US"
+        visible={openTimePickerStart}
+        onDismiss={() => setOpenTimePickerStart(false)}
+        onConfirm={(params) => {
+          setOpenTimePickerStart(false);
+          setStartTime(new Date(0, 0, 0, params.hours, params.minutes));
+        }}
+        hours={startTime.getHours()} // default: current hours
+        minutes={startTime.getMinutes()} // default: current minutes
+      />
+      <TimePickerModal
+        locale="en-US"
+        visible={openTimePickerEnd}
+        onDismiss={() => setOpenTimePickerEnd(false)}
+        onConfirm={(params) => {
+          setOpenTimePickerEnd(false);
+          setEndTime(new Date(0, 0, 0, params.hours, params.minutes));
+        }}
+        hours={endTime.getHours()} // default: current hours
+        minutes={endTime.getMinutes()} // default: current minutes
+      />
     </ScrollView>
   );
 };
@@ -128,6 +134,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
   },
   card: {
     width: '100%',
@@ -141,7 +154,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
   },
+  backButton: {
+    alignSelf: 'flex-start',
+  },
 });
 
 export default EventEditForm;
-
