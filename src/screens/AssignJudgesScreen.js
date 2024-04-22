@@ -3,10 +3,11 @@ import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } 
 import { Card, Button } from 'react-native-paper';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native'; // Import useRoute hook
 
 const AssignJudgesScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute(); // Use useRoute hook to access route object
   const [events, setEvents] = useState([]);
   const [judges, setJudges] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -52,21 +53,33 @@ const AssignJudgesScreen = () => {
       Alert.alert("Firebase Error", "Failed to fetch judges: " + error.message);
     });
 
-// Fetch projects
-const projectsRef = ref(db, 'projects/');
-onValue(projectsRef, snapshot => {
-  const projectData = snapshot.val() || {};
-  const projectsArray = Object.keys(projectData).map(key => ({
-    id: key,
-    ...projectData[key]
-  }));
-  setProjects(projectsArray);
-}, error => {
-  Alert.alert("Firebase Error", "Failed to fetch projects: " + error.message);
-});
+    // Fetch projects
+    const projectsRef = ref(db, 'projects/');
+    onValue(projectsRef, snapshot => {
+      const projectData = snapshot.val() || {};
+      const projectsArray = Object.keys(projectData).map(key => ({
+        id: key,
+        ...projectData[key]
+      }));
+      setProjects(projectsArray);
+    }, error => {
+      Alert.alert("Firebase Error", "Failed to fetch projects: " + error.message);
+    });
 
-
-  }, []);
+    // Check if there are navigation parameters
+    if (route.params) {
+      const { judgeId, eventId, projectId } = route.params;
+      if (judgeId) {
+        setSelectedJudge(judgeId);
+      }
+      if (eventId) {
+        setSelectedEvent(eventId);
+      }
+      if (projectId) {
+        setSelectedProject(projectId);
+      }
+    }
+  }, [route.params]);
 
   useEffect(() => {
     console.log("Projects loaded:", projects);
