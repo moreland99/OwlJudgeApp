@@ -1,10 +1,10 @@
 // EventEditForm.js
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, TextInput, Text, useTheme, Card } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Button, TextInput, Card, useTheme } from 'react-native-paper';
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
-import LogoComponent from '../components/LogoComponent'; // Adjust import path as necessary
-import { getDatabase, ref, update } from 'firebase/database';
+import LogoComponent from '../components/LogoComponent';
+import Modal from 'react-native-modal'; // Import from react-native-modal
 
 const EventEditForm = ({ event, onClose }) => {
   const theme = useTheme();
@@ -36,6 +36,15 @@ const EventEditForm = ({ event, onClose }) => {
   };
 
   return (
+    <Modal
+      isVisible={true} // Control this with a state variable if needed
+      onSwipeComplete={onClose} // Handle swipe to close
+      swipeDirection="down" // Enable swipe down
+      backdropOpacity={0.3} //Dim the background to focus on the modal
+      style={styles.modal}
+    >
+      <View style={styles.modalContent}>
+        <View style={styles.handleIndicator} />
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
       <LogoComponent />
       <Card style={styles.card}>
@@ -119,18 +128,33 @@ const EventEditForm = ({ event, onClose }) => {
         </Card.Content>
       </Card>
     </ScrollView>
+    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  modal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
+    paddingTop: 10,
+    minHeight: '50%',  // Cover only half of the screen
+  },
+  handleIndicator: {
+    alignSelf: 'center',
+    width: 40,
+    height: 5,
+    backgroundColor: '#ccc',
+    borderRadius: 10,
+    marginVertical: 8,
   },
   card: {
-    width: '100%',
     padding: 8,
     marginVertical: 8,
   },
@@ -139,7 +163,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    marginBottom: 10,
   },
 });
 
