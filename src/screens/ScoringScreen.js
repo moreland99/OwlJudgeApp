@@ -10,7 +10,7 @@ import CustomTheme from '../../theme';  // Ensure the correct path is used
 
 const ScoringScreen = ({ route, navigation }) => {
   const { projectId } = route.params;  // Ensure projectId is passed correctly
-  const { projectDetails } = route.params;
+  const [projectDetails, setProjectDetails] = useState(null);
   const [score, setScore] = useState('');
   const [feedback, setFeedback] = useState('');
 
@@ -18,32 +18,38 @@ const ScoringScreen = ({ route, navigation }) => {
   const user = auth.currentUser;
 
   useEffect(() => {
+    console.log("Received project ID:", projectId);
     if (projectId) {
       const projectRef = ref(getDatabase(app), `projects/${projectId}`);
       get(projectRef).then((snapshot) => {
         if (snapshot.exists()) {
-          // Assuming that the project data might be nested under an unknown key
-          const projectData = snapshot.val();
-          const projectKey = Object.keys(projectData)[0]; // This gets the first key under the project
-          const details = projectData[projectKey];
-          console.log('Project details:', details);  // Debugging: Log fetched data
-          setProjectDetails(details);
+          setProjectDetails(snapshot.val());
         } else {
-          console.log('No project data available');  // Debugging: Log if no data
+          console.log('No project data available');
         }
       }).catch((error) => {
-        console.error('Error fetching project data:', error);  // Error handling
+        console.error('Error fetching project data:', error);
       });
     }
   }, [projectId]);
   
+  
+  
 
   const handleSubmitScore = () => {
     const db = getDatabase(app);
-    const judgeId = auth.currentUser.uid; // Assuming you're using Firebase Authentication
+  
+    // Ensure we have a logged in user before proceeding
+    const user = auth.currentUser;
+    if (!user) {
+      alert('You must be logged in to submit a score.');
+      return;
+    }
+  
+    const judgeId = user.uid;
     const scoreRef = ref(db, `scores/${projectId}/${judgeId}`);
-    
-    // Check if a score already exists
+  
+    // Now we check if a score already exists
     get(scoreRef).then((snapshot) => {
       if (snapshot.exists()) {
         alert('You have already submitted a score for this project.');
@@ -65,6 +71,7 @@ const ScoringScreen = ({ route, navigation }) => {
       console.error('Error checking existing score:', error);
     });
   };
+  
   
 
   if (!projectDetails) {

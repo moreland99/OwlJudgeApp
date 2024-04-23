@@ -3,7 +3,7 @@ import { View, SectionList, StyleSheet, TouchableOpacity, Text } from 'react-nat
 import { Card, Title, Paragraph } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get, onValue } from 'firebase/database';
+import { getDatabase, ref, get, onValue, off } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
@@ -62,7 +62,8 @@ const ProjectListScreen = ({ navigation }) => {
     <TouchableOpacity
       onPress={() => {
         if (!item.score) {
-          navigation.navigate('ProjectScoringScreen', { projectDetails: item });
+          // Assuming 'item.id' is the projectId; adjust the property name based on your data structure
+          navigation.navigate('ProjectScoringScreen', { projectDetails: item, projectId: item.id });
         }
       }}
       disabled={!!item.score}
