@@ -1,3 +1,4 @@
+// EventEditForm.js
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, TextInput, Card, useTheme } from 'react-native-paper';
@@ -9,8 +10,6 @@ import { ref, update } from 'firebase/database';
 
 const EventEditForm = ({ event, onClose }) => {
   const theme = useTheme();
-  const navigation = useNavigation();
-
   const [eventName, setEventName] = useState(event.name);
   const [startDate, setStartDate] = useState(new Date(event.startDate));
   const [endDate, setEndDate] = useState(new Date(event.endDate));
@@ -52,11 +51,7 @@ const EventEditForm = ({ event, onClose }) => {
       <View style={styles.modalContent}>
         <View style={styles.handleIndicator} />
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Button icon="arrow-left" mode="outlined" onPress={() => navigation.goBack()} style={styles.backButton}>
-          Back to Admin Dashboard
-        </Button>
-      </View>
+      <LogoComponent />
       <Card style={styles.card}>
         <Card.Content>
           <Text style={{ color: theme.colors.text, marginBottom: 20 }}>Edit Event</Text>
@@ -72,18 +67,62 @@ const EventEditForm = ({ event, onClose }) => {
           <Button icon="calendar" mode="outlined" onPress={() => setOpenStartDatePicker(true)} style={styles.button}>
             Pick Start Date
           </Button>
+          <DatePickerModal
+            locale="en-US"
+            mode="single"
+            visible={openStartDatePicker}
+            onDismiss={() => setOpenStartDatePicker(false)}
+            date={startDate}
+            onConfirm={(params) => {
+              setOpenStartDatePicker(false);
+              setStartDate(params.date);
+            }}
+          />
           {/* End Date Picker */}
           <Button icon="calendar" mode="outlined" onPress={() => setOpenEndDatePicker(true)} style={styles.button}>
             Pick End Date
           </Button>
+          <DatePickerModal
+            locale="en-US"
+            mode="single"
+            visible={openEndDatePicker}
+            onDismiss={() => setOpenEndDatePicker(false)}
+            date={endDate}
+            onConfirm={(params) => {
+              setOpenEndDatePicker(false);
+              setEndDate(params.date);
+            }}
+          />
           {/* Start Time Picker */}
           <Button icon="clock-outline" mode="outlined" onPress={() => setOpenTimePickerStart(true)} style={styles.button}>
             Pick Start Time
           </Button>
+          <TimePickerModal
+            locale="en-US"
+            visible={openTimePickerStart}
+            onDismiss={() => setOpenTimePickerStart(false)}
+            onConfirm={(params) => {
+              setOpenTimePickerStart(false);
+              setStartTime(new Date(0, 0, 0, params.hours, params.minutes));
+            }}
+            hours={startTime.getHours()} // default: current hours
+            minutes={startTime.getMinutes()} // default: current minutes
+          />
           {/* End Time Picker */}
           <Button icon="clock-outline" mode="outlined" onPress={() => setOpenTimePickerEnd(true)} style={styles.button}>
             Pick End Time
           </Button>
+          <TimePickerModal
+            locale="en-US"
+            visible={openTimePickerEnd}
+            onDismiss={() => setOpenTimePickerEnd(false)}
+            onConfirm={(params) => {
+              setOpenTimePickerEnd(false);
+              setEndTime(new Date(0, 0, 0, params.hours, params.minutes));
+            }}
+            hours={endTime.getHours()} // default: current hours
+            minutes={endTime.getMinutes()} // default: current minutes
+          />
           <Button 
             mode="contained" 
             onPress={handleEditEvent}
@@ -93,51 +132,6 @@ const EventEditForm = ({ event, onClose }) => {
           </Button>
         </Card.Content>
       </Card>
-      {/* Date & Time Pickers */}
-      <DatePickerModal
-        locale="en-US"
-        mode="single"
-        visible={openStartDatePicker}
-        onDismiss={() => setOpenStartDatePicker(false)}
-        date={startDate}
-        onConfirm={(params) => {
-          setOpenStartDatePicker(false);
-          setStartDate(params.date);
-        }}
-      />
-      <DatePickerModal
-        locale="en-US"
-        mode="single"
-        visible={openEndDatePicker}
-        onDismiss={() => setOpenEndDatePicker(false)}
-        date={endDate}
-        onConfirm={(params) => {
-          setOpenEndDatePicker(false);
-          setEndDate(params.date);
-        }}
-      />
-      <TimePickerModal
-        locale="en-US"
-        visible={openTimePickerStart}
-        onDismiss={() => setOpenTimePickerStart(false)}
-        onConfirm={(params) => {
-          setOpenTimePickerStart(false);
-          setStartTime(new Date(0, 0, 0, params.hours, params.minutes));
-        }}
-        hours={startTime.getHours()} // default: current hours
-        minutes={startTime.getMinutes()} // default: current minutes
-      />
-      <TimePickerModal
-        locale="en-US"
-        visible={openTimePickerEnd}
-        onDismiss={() => setOpenTimePickerEnd(false)}
-        onConfirm={(params) => {
-          setOpenTimePickerEnd(false);
-          setEndTime(new Date(0, 0, 0, params.hours, params.minutes));
-        }}
-        hours={endTime.getHours()} // default: current hours
-        minutes={endTime.getMinutes()} // default: current minutes
-      />
     </ScrollView>
     </View>
     </KeyboardAvoidingView>
