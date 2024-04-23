@@ -4,6 +4,7 @@ import { Button, Card, Modal, Portal, List, Badge, IconButton } from 'react-nati
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
+import LogoComponent from '../components/LogoComponent';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [eventCount, setEventCount] = useState(0);
@@ -16,7 +17,7 @@ const AdminDashboardScreen = ({ navigation }) => {
   const [selectedJudgeId, setSelectedJudgeId] = useState(null);
   const [judgeRequests, setJudgeRequests] = useState([]);
   const [showAllRequests, setShowAllRequests] = useState(false);
-
+  
   const [notificationsCount, setNotificationsCount] = useState(0); // To keep track of the number of notifications
 
   useEffect(() => {
@@ -93,6 +94,7 @@ onValue(requestsRef, (snapshot) => {
   return (
     <ScrollView style={styles.fullscreen}>
       <View style={styles.container}>
+      <LogoComponent />
         <View style={styles.statsContainer}>
           <StatCard label="Total Events" count={eventCount} styles={styles} />
           <StatCard label="Total Projects" count={projectCount} styles={styles} />
@@ -118,7 +120,7 @@ onValue(requestsRef, (snapshot) => {
 
 {judgeRequests.length > 0 && (
   <>
-    <Text style={styles.notificationsHeader}>Notifications</Text>
+    <Text style={styles.notificationsHeader}>Notifications ({judgeRequests.length})</Text>
     {judgeRequests.map(request => (
       <Card key={request.id} style={{ margin: 10 }}>
         <Card.Title
@@ -227,7 +229,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   toggleButton: {
-    backgroundColor: CustomTheme.colors.secondary,
+    backgroundColor: CustomTheme.colors.primary,
     padding: 10,
     elevation: 4,
     borderRadius: CustomTheme.roundness,

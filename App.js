@@ -101,7 +101,7 @@ const JudgeTabNavigator = ({ isAdmin}) => (
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
     <Tab.Screen name="Events" component={EventStackNavigator} /> 
     <Tab.Screen name="Projects" component={ProjectsStackNavigator} />
-    <Tab.Screen name="Profile" component={ProfileScreen} />
+    <Tab.Screen name="Profile" component={ProfileScreen}/>
      {/* Conditionally render the Admin tab if isAdmin is true */}
 {isAdmin && (
   <Tab.Screen
