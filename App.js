@@ -56,7 +56,7 @@ const EventStackNavigator = () => (
 
 const AdminStackNavigator = () => (
   <AdminStack.Navigator initialRouteName="AdminDashboard">
-    <AdminStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+    <AdminStack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: 'Admin Dashboard' }} />
     <AdminStack.Screen name="EventDashboard" component={EventDashboardScreen} />
     <AdminStack.Screen name="JudgeList" component={JudgeListScreen} />
     <AdminStack.Screen name="ProjectSubmission" component={ProjectSubmissionScreen} />
@@ -67,7 +67,7 @@ const AdminStackNavigator = () => (
 
 const ProjectsStackNavigator = () => (
   <ProjectsStack.Navigator>
-    <ProjectsStack.Screen name="ProjectList" component={ProjectListScreen} options={{ title: 'Projects' }} />
+    <ProjectsStack.Screen name="ProjectList" component={ProjectListScreen} options={{ title: 'Assigned Projects' }} />
     <ProjectsStack.Screen name="ProjectScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
   </ProjectsStack.Navigator>
 );
@@ -90,7 +90,6 @@ const JudgeTabNavigator = ({ isAdmin}) => (
           iconName = focused ? 'shield' : 'shield-outline';
         }
 
-        // You can return any component that you like here!
         return <Icon name={iconName} size={size} color={color} type="ionicon" />;
       },
       tabBarActiveTintColor: 'gold', 

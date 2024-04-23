@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, KeyboardAvoidingView,
+  TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';
 import { Button, TextInput, Card } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getDatabase, ref, get, set, push, auth } from 'firebase/database';
@@ -75,41 +76,51 @@ const ScoringScreen = ({ route, navigation }) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: CustomTheme.colors.background }]}>
-      <LogoComponent />
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={[styles.text, { color: CustomTheme.colors.text }]}>Score Project: {projectDetails.title}</Text>
-          <Text>Project Summary: {projectDetails.summary}</Text>
-
-          <TextInput
-            mode="outlined"
-            label="Score (0-100)"
-            keyboardType="numeric"
-            value={score}
-            onChangeText={text => setScore(text.replace(/[^0-9]/g, ''))}
-            style={styles.input}
-          />
-          <TextInput
-            mode="outlined"
-            label="Feedback"
-            value={feedback}
-            onChangeText={setFeedback}
-            multiline
-            numberOfLines={4}
-            style={[styles.input, { height: 100 }]}
-          />
-          <Button
-            mode="contained"
-            onPress={handleSubmitScore}
-            style={styles.button}
-          >
-            Submit Score
-          </Button>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "position"} // Changed to "position" for Android
+      keyboardVerticalOffset={Platform.OS === "ios" ? 110 : 84}  // Adjusted for typical header + status bar height
+    >
+      <ScrollView
+        contentContainerStyle={[styles.container, { backgroundColor: CustomTheme.colors.background }]}
+        keyboardShouldPersistTaps='handled'  // Helps with tapping buttons without dismissing the keyboard
+      >
+        <LogoComponent />
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={[styles.text, { color: CustomTheme.colors.text }]}>Score Project: {projectDetails.title}</Text>
+            <Text>Project Summary: {projectDetails.summary}</Text>
+  
+            <TextInput
+              mode="outlined"
+              label="Score (0-100)"
+              keyboardType="numeric"
+              value={score}
+              onChangeText={text => setScore(text.replace(/[^0-9]/g, ''))}
+              style={styles.input}
+            />
+            <TextInput
+              mode="outlined"
+              label="Feedback"
+              value={feedback}
+              onChangeText={setFeedback}
+              multiline
+              numberOfLines={4}
+              style={[styles.input, { height: 100 }]}
+            />
+            <Button
+              mode="contained"
+              onPress={handleSubmitScore}
+              style={styles.button}
+            >
+              Submit Score
+            </Button>
+          </Card.Content>
+        </Card>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
+  
 };
 
 const styles = StyleSheet.create({
