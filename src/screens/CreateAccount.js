@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, TextInput, TouchableOpacity, Text, StyleSheet, Image, Alert,
-  TouchableWithoutFeedback, Keyboard
+  TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getDatabase, ref, set } from 'firebase/database';
@@ -20,74 +20,73 @@ const CreateAccount = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       if (user) {
-  
-      // Use the UID from the authentication as the key for the judge's entry
-      const judgeRef = ref(getDatabase(), 'judges/' + user.uid);
-  
-      // Save the judge details to the Realtime Database
-      await set(judgeRef, {
-        uid: user.uid, // Use Firebase Authentication UID as judge ID
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
-        role: 'judge',
-        // Add any additional judge details here
-      });
-  
-      console.log('Account created!');
-      Alert.alert(
-        'Account created!',
-        'Your judge account has been created successfully. Please login to continue.',
-        [{ text: 'OK' }]
-      );
-      navigation.navigate('Login'); // Navigate back to the login screen
+        const judgeRef = ref(getDatabase(), 'judges/' + user.uid);
+        await set(judgeRef, {
+          uid: user.uid,
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
+          role: 'judge',
+        });
+        console.log('Account created!');
+        Alert.alert(
+          'Account created!',
+          'Your judge account has been created successfully. Please login to continue.',
+          [{ text: 'OK' }]
+        );
+        navigation.navigate('Login');
       }
     } catch (error) {
       console.error("Signup error", error);
       Alert.alert('Error', error.message, [{ text: 'OK' }]);
     }
   };
-  
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <Image source={require('../assets/owlJudgeLogo.png')} style={styles.logo} />
-        <Text style={styles.title}>Create Account</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="First Name"
-          value={firstName}
-          onChangeText={setFirstName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Last Name"
-          value={lastName}
-          onChangeText={setLastName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-        <Text style={styles.switchScreenText}>Already have an account?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.linkText}>Go to Login</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableWithoutFeedback>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}  // Adjusted for better visibility on iOS
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <Image source={require('../assets/owlJudgeLogo.png')} style={styles.logo} />
+          <Text style={styles.title}>Create Account</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="First Name"
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Last Name"
+            value={lastName}
+            onChangeText={setLastName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+          <Text style={styles.switchScreenText}>Already have an account?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.linkText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -97,7 +96,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff', // or any suitable background color
+    backgroundColor: '#fff',
   },
   logo: {
     width: 150,

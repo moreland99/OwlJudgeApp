@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, TextInput, TouchableOpacity, Text, StyleSheet, Image, Alert,
-  TouchableWithoutFeedback, Keyboard
+  TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { getDatabase, ref, set, get, push } from 'firebase/database';
@@ -54,6 +54,11 @@ const LoginScreen = () => {
   
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}  // Adjusted for better visibility on iOS
+    >
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Image source={require('../assets/owlJudgeLogo.png')} style={styles.logo} />
@@ -80,6 +85,7 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
     </TouchableWithoutFeedback>
+  </KeyboardAvoidingView>
   );
 };
 
