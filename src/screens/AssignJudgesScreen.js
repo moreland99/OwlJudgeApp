@@ -96,16 +96,12 @@ const AssignJudgesScreen = () => {
   }, [route.params]);
 
   useEffect(() => {
-    console.log("Projects loaded:", projects);
-    console.log("Selected event ID:", selectedEvent?.id);
 
     if (selectedEvent) {
       const filtered = projects.filter((project) => {
-        console.log("Project event ID:", project.event);
         return String(project.event) === String(selectedEvent.id);
       });
 
-      console.log(`Filtered projects for event ${selectedEvent.id}:`, filtered);
       setFilteredProjects(filtered);
     } else {
       setFilteredProjects([]);
@@ -136,34 +132,16 @@ const AssignJudgesScreen = () => {
     }
   };
 
-  const handleSearchProject = (text) => {
-    setSearchProject(text);
-    if (!text.trim()) {
-      setFilteredProjects(projects);
-    } else {
-      const filtered = projects.filter((project) =>
-        project.name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredProjects(filtered);
-    }
-  };
-
-  // Make sure to update the selectedProject with an object, not just the id
-  const onProjectSelected = (itemValue) => {
-    const project = projects.find((p) => p.id === itemValue);
-    setSelectedProject(project);
-  };
-
   const handleSelectProject = (project) => {
-    if (selectedProjects.some(selected => selected.id === project.id)) {
-      setSelectedProjects(selectedProjects.filter(selected => selected.id !== project.id));
+    if (selectedProject.some(selected => selected.id === project.id)) {
+      setSelectedProject(selectedProject.filter(selected => selected.id !== project.id));
     } else {
-      setSelectedProjects([...selectedProjects, project]);
+      setSelectedProject([...selectedProject, project]);
     }
   };
 
   const assignJudgeToEventAndProject = () => {
-    if (!selectedEvent || !selectedJudge || selectedProjects.length === 0) {
+    if (!selectedEvent || !selectedJudge || selectedProject.length === 0) {
       Alert.alert("Selection Missing", "Please select an event, a judge, and at least one project.");
       return;
     }

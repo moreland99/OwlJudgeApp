@@ -24,7 +24,6 @@ const AdminDashboardScreen = ({ navigation }) => {
     const eventListRef = ref(db, 'events/');
     const judgeListRef = ref(db, 'judges/');
     const projectListRef = ref(db, 'projects/'); 
-    const requestsRef = ref(db, 'judgeRequests');
 
 
     // Fetch Events
@@ -66,15 +65,14 @@ const AdminDashboardScreen = ({ navigation }) => {
     });
 
  // Fetch Judge Requests
- onValue(requestsRef, (snapshot) => {
+ const requestsRef = ref(db, 'judgeRequests');
+onValue(requestsRef, (snapshot) => {
   const now = Date.now();
   const twoHoursAgo = now - 2 * 60 * 60 * 1000;
   const requests = [];
-
   snapshot.forEach((requestSnapshot) => {
     const requestId = requestSnapshot.key;
     const request = requestSnapshot.val();
-    // Apply the time filter only if showAllRequests is false
     if (showAllRequests || new Date(request.requestDate).getTime() >= twoHoursAgo) {
       requests.push({
         id: requestId,
@@ -82,7 +80,6 @@ const AdminDashboardScreen = ({ navigation }) => {
       });
     }
   });
-
   setJudgeRequests(requests);
 }, (error) => {
   console.error("Firebase onValue error: ", error);
@@ -119,31 +116,31 @@ const AdminDashboardScreen = ({ navigation }) => {
 
 
 
-        {judgeRequests.length > 0 && (
-          <>
-            <Text style={styles.notificationsHeader}>Notifications</Text>
-            {judgeRequests.map(request => (
-              <Card key={request.id} style={{ margin: 10 }}>
-                <Card.Title
-                  title={`Judge Request: ${request.judgeName}`}
-                  subtitle={`Project: ${request.projectTitle}`}
-                  left={(props) => <List.Icon {...props} icon="bell-ring" color={CustomTheme.colors.notification} />}
-                  right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>}
-                  CustomTheme={CustomTheme} // Pass the CustomTheme as a prop
-                />
-                <Card.Actions>
-                  <Button onPress={() => {
-                    navigation.navigate('AssignJudges', {
-                      judgeId: request.judgeId,
-                      eventId: request.eventId,
-                      projectId: request.projectId
-                    });
-                  }}>View Details</Button>
-                </Card.Actions>
-              </Card>
-            ))}
-          </>
-        )}
+{judgeRequests.length > 0 && (
+  <>
+    <Text style={styles.notificationsHeader}>Notifications</Text>
+    {judgeRequests.map(request => (
+      <Card key={request.id} style={{ margin: 10 }}>
+        <Card.Title
+          title={`Judge Request: ${request.judgeName}`}
+          subtitle={`Project: ${request.projectTitle}`}
+          left={(props) => <List.Icon {...props} icon="bell-ring" color={CustomTheme.colors.notification} />}
+          right={(props) => <Badge {...props} size={24} style={styles.badge}>NEW</Badge>}
+        />
+        <Card.Actions>
+          <Button onPress={() => {
+            navigation.navigate('AssignJudges', {
+              judgeId: request.judgeId,
+              eventId: request.eventId,
+              projectId: request.projectId
+            });
+          }}>View Details</Button>
+        </Card.Actions>
+      </Card>
+    ))}
+  </>
+)}
+
       </View>
       <Portal>
         <Modal visible={isModalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
