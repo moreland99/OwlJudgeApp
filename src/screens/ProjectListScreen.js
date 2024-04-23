@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, SectionList, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
+import LogoComponent from '../components/LogoComponent';
 import { getAuth } from 'firebase/auth';
 import { getDatabase, ref, get, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
@@ -84,6 +85,7 @@ const ProjectListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <LogoComponent />
       <SectionList
         sections={projectSections}
         keyExtractor={(item, index) => item.id + index}
