@@ -37,7 +37,6 @@ const LoginScreen = () => {
         }
   
         console.log('Judge exists or was created, navigating to dashboard with judgeKey:', judgeKey);
-        navigation.navigate('JudgeDashboardScreen', { judgeKey: judgeKey });
       } else {
         console.log('No user object found after login.');
       }
@@ -46,11 +45,6 @@ const LoginScreen = () => {
       Alert.alert('Login Error', error.message, [{ text: 'OK' }]);
     }
   };
-  
-  function navigateToDashboard(judgeKey) {
-    Alert.alert('Login Successful', 'You are now logged in.', [{ text: 'OK' }]);
-    navigation.navigate('JudgeDashboardScreen', { judgeKey: judgeKey });
-  }
   
 
   return (
