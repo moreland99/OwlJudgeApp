@@ -33,6 +33,7 @@ const Stack = createNativeStackNavigator(); // For authentication flow and modal
 const EventStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const AdminStack = createNativeStackNavigator();
+const ProjectsStack = createNativeStackNavigator();
 
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -64,6 +65,13 @@ const AdminStackNavigator = () => (
   </AdminStack.Navigator>
 );
 
+const ProjectsStackNavigator = () => (
+  <ProjectsStack.Navigator>
+    <ProjectsStack.Screen name="ProjectList" component={ProjectListScreen} options={{ title: 'Projects' }} />
+    <ProjectsStack.Screen name="ProjectScoringScreen" component={ScoringScreen} options={{ title: 'Scoring' }} />
+  </ProjectsStack.Navigator>
+);
+
 const JudgeTabNavigator = ({ isAdmin}) => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -91,7 +99,7 @@ const JudgeTabNavigator = ({ isAdmin}) => (
   >
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
     <Tab.Screen name="Events" component={EventStackNavigator} /> 
-    <Tab.Screen name="Projects" component={ProjectListScreen} />
+    <Tab.Screen name="Projects" component={ProjectsStackNavigator} />
      {/* Conditionally render the Admin tab if isAdmin is true */}
 {isAdmin && (
   <Tab.Screen
