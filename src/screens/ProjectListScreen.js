@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, SectionList, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, onValue } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
@@ -14,44 +14,54 @@ const ProjectListScreen = ({ navigation }) => {
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
-      const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
-      get(judgeProjectsRef).then(snapshot => {
-        if (snapshot.exists()) {
-          const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
-          const projectDetailsPromises = projectIDs.map(id => 
-            get(ref(db, `projects/${id}`)).then(projectSnapshot => {
-              if (projectSnapshot.exists()) {
-                return get(ref(db, `scores/${id}/${user.uid}`)).then(scoreSnapshot => {
-                  return {
-                    id: id,
-                    ...projectSnapshot.val(),
-                    score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
-                  };
-                });
-              }
-            })
-          );
+        const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
+        // Using 'on' instead of 'get' to listen for real-time updates
+        onValue(judgeProjectsRef, snapshot => {
+            if (snapshot.exists()) {
+                const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
+                const projectDetailsPromises = projectIDs.map(id => 
+                    get(ref(db, `projects/${id}`)).then(projectSnapshot => {
+                        if (projectSnapshot.exists()) {
+                            return get(ref(db, `scores/${id}/${user.uid}`)).then(scoreSnapshot => {
+                                return {
+                                    id: id,
+                                    ...projectSnapshot.val(),
+                                    score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
+                                };
+                            });
+                        }
+                    })
+                );
 
-          Promise.all(projectDetailsPromises).then(projects => {
-            const scoredProjects = projects.filter(p => p.score !== undefined);
-            const unscoredProjects = projects.filter(p => p.score === undefined);
-            setProjectSections([
-              { title: 'Scored Projects', data: scoredProjects },
-              { title: 'Unscored Projects', data: unscoredProjects }
-            ]);
-          });
-        } else {
-          console.log('No projects are assigned to this judge.');
-        }
-      });
+                Promise.all(projectDetailsPromises).then(projects => {
+                    const scoredProjects = projects.filter(p => p.score !== undefined);
+                    const unscoredProjects = projects.filter(p => p.score === undefined);
+                    setProjectSections([
+                        { title: 'Scored Projects', data: scoredProjects },
+                        { title: 'Unscored Projects', data: unscoredProjects }
+                    ]);
+                });
+            } else {
+                console.log('No projects are assigned to this judge.');
+            }
+        });
     }
-  }, []);
+
+    // Return a function to unsubscribe when the component unmounts
+    return () => {
+        if (user) {
+            const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
+            off(judgeProjectsRef); // Detach the listener
+        }
+    };
+}, []); // Keep dependency array empty to mimic componentDidMount
+
 
   const renderProject = ({ item }) => (
     <TouchableOpacity
       onPress={() => {
         if (!item.score) {
-          navigation.navigate('ScoringScreen', { projectId: item.id });
+          navigation.navigate('ProjectScoringScreen', { projectDetails: item });
         }
       }}
       disabled={!!item.score}

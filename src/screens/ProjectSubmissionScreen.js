@@ -49,12 +49,13 @@ const ProjectSubmissionScreen = ({ navigation }) => {
     set(newProjectRef, newProject) // Use 'set' instead of 'push' to set the project data
       .then(() => {
         alert('Project submitted successfully with ID ' + newProjectRef.key + '!');
-        navigation.goBack();
+        navigation.navigate('ProjectListScreen'); // Changed from goBack to navigate
       })
       .catch((error) => {
         alert("Failed to submit project: " + error.message);
       });
   };
+
   
 
   return (

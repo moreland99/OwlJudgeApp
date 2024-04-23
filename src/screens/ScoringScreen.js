@@ -9,7 +9,7 @@ import CustomTheme from '../../theme';  // Ensure the correct path is used
 
 const ScoringScreen = ({ route, navigation }) => {
   const { projectId } = route.params;  // Ensure projectId is passed correctly
-  const [projectDetails, setProjectDetails] = useState(null);
+  const { projectDetails } = route.params;
   const [score, setScore] = useState('');
   const [feedback, setFeedback] = useState('');
 
