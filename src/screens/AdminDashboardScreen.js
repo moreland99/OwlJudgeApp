@@ -1,25 +1,9 @@
-import React, { useEffect, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
-import {
-  Button,
-  Card,
-  useTheme,
-  Modal,
-  Portal,
-  List,
-  Badge,
-  IconButton,
-} from "react-native-paper";
-import { getDatabase, ref, onValue } from "firebase/database";
-import { app } from "../firebase/firebaseConfig";
-import CustomTheme from "../../theme";
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { Button, Card, Modal, Portal, List, Badge, IconButton } from 'react-native-paper';
+import { getDatabase, ref, onValue } from 'firebase/database';
+import { app } from '../firebase/firebaseConfig';
+import CustomTheme from '../../theme';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [eventCount, setEventCount] = useState(0);
@@ -32,9 +16,6 @@ const AdminDashboardScreen = ({ navigation }) => {
   const [selectedJudgeId, setSelectedJudgeId] = useState(null);
   const [judgeRequests, setJudgeRequests] = useState([]);
   const [showAllRequests, setShowAllRequests] = useState(false);
-
-  const CustomTheme = useTheme();
-  const styles = getDynamicStyles(CustomTheme);
 
   const [notificationsCount, setNotificationsCount] = useState(0); // To keep track of the number of notifications
 
@@ -106,18 +87,11 @@ const AdminDashboardScreen = ({ navigation }) => {
           }
         });
 
-        setJudgeRequests(requests);
-      },
-      (error) => {
-        console.error("Firebase onValue error: ", error);
-      }
-    );
-  }, [showAllRequests]); // Re-run the effect when showAllRequests changes
-
-  const openModal = () => setModalVisible(true);
-  const closeModal = () => setModalVisible(false);
-  const handleSelectEvent = (eventId) => setSelectedEventId(eventId);
-  const handleSelectJudge = (judgeId) => setSelectedJudgeId(judgeId);
+  setJudgeRequests(requests);
+}, (error) => {
+  console.error("Firebase onValue error: ", error);
+});
+}, [showAllRequests]); // Re-run the effect when showAllRequests changes
 
   const toggleRequestView = () => {
     setShowAllRequests(!showAllRequests);
@@ -136,36 +110,11 @@ const AdminDashboardScreen = ({ navigation }) => {
           <StatCard label="Total Judges" count={judgeCount} styles={styles} />
         </View>
         <View style={styles.quickLinksContainer}>
-          <QuickLinkButton
-            title=" Events"
-            iconName="calendar-check"
-            onPress={() => navigation.navigate("EventDashboard")}
-            styles={styles}
-          />
-          <QuickLinkButton
-            title=" Judges"
-            iconName="account-group"
-            onPress={() => navigation.navigate("JudgeList")}
-            styles={styles}
-          />
-          <QuickLinkButton
-            title=" Projects"
-            iconName="book-open-page-variant"
-            onPress={() => navigation.navigate("ProjectSubmission")}
-            styles={styles}
-          />
-          <QuickLinkButton
-            title=" Scoring"
-            iconName="scoreboard"
-            onPress={() => navigation.navigate("Scoring & Feedback")}
-            styles={styles}
-          />
-          <QuickLinkButton
-            title=" Add Judges"
-            iconName="account-plus"
-            onPress={() => navigation.navigate("AssignJudges")}
-            styles={styles}
-          />
+          <QuickLinkButton title=" Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
+          <QuickLinkButton title=" Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeList')} styles={styles} />
+          <QuickLinkButton title=" Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('ProjectSubmission')} styles={styles} />
+          <QuickLinkButton title=" Scoring" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
+          <QuickLinkButton title=" Assign" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
 
         <Button
@@ -229,90 +178,94 @@ const AdminDashboardScreen = ({ navigation }) => {
   );
 };
 
-const getDynamicStyles = () =>
-  StyleSheet.create({
-    fullscreen: {
-      flex: 1,
-      backgroundColor: CustomTheme.colors.background,
-    },
-    container: {
-      flex: 1,
-      padding: 10,
-    },
-    quickLinksContainer: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "space-around",
-    },
-    quickLinkCard: {
-      width: "45%",
-      margin: 2,
-      padding: 10,
-      alignItems: "center",
-      backgroundColor: CustomTheme.colors.surface,
-    },
-    card: {
-      borderRadius: CustomTheme.roundness,
-      flex: 1,
-      justifyContent: "center",
-      backgroundColor: CustomTheme.colors.surface,
-    },
-    buttonIcon: {
-      justifyContent: "center",
-      fontSize: 16,
-    },
-    statsContainer: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-    },
-    statCard: {
-      flex: 1,
-      alignItems: "center",
-      marginBottom: 10,
-      backgroundColor: CustomTheme.colors.surface,
-    },
-    statLabel: {
-      fontSize: 16,
-      color: CustomTheme.colors.text,
-    },
-    statCount: {
-      fontSize: 22,
-      fontWeight: "bold",
-      color: CustomTheme.colors.primary,
-    },
-    modalContainer: {
-      backgroundColor: "white",
-      padding: 20,
-      margin: 20,
-    },
-    notificationsHeader: {
-      fontSize: 18,
-      fontWeight: "bold",
-      marginTop: 10,
-      marginBottom: 5,
-      paddingLeft: 10,
-      color: CustomTheme.colors.primary,
-    },
-    notificationCard: {
-      marginVertical: 5,
-      marginHorizontal: 10,
-      borderColor: CustomTheme.colors.notification,
-      borderWidth: 1,
-    },
-    badge: {
-      backgroundColor: CustomTheme.colors.accent,
-      color: "white",
-    },
-    toggleButton: {
-      backgroundColor: CustomTheme.colors.secondary,
-      padding: 10,
-      elevation: 4,
-      borderRadius: CustomTheme.roundness,
-    },
-    toggleButtonText: {
-      color: CustomTheme.colors.text,
-    },
-  });
+
+const styles = StyleSheet.create({
+  fullscreen: {
+    flex: 1,
+    backgroundColor: CustomTheme.colors.background,
+  },
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  quickLinksContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    
+  },
+  quickLinkCard: {
+    width: '48%',
+    margin: 0,
+    padding: 6,
+    //alignItems: 'center',
+    backgroundColor: CustomTheme.colors.surface,
+  },
+  card: {
+    borderRadius: CustomTheme.roundness,
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: CustomTheme.colors.surface,
+  },
+  buttonIcon: {
+    justifyContent: 'center',
+    fontSize: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    marginBottom: 10,
+    backgroundColor: CustomTheme.colors.surface,
+  },
+  statLabel: {
+    fontSize: 16,
+    color: CustomTheme.colors.text,
+  },
+  statCount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: CustomTheme.colors.primary,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    margin: 20,
+  },
+  notificationsHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+    paddingLeft: 10,
+    color: CustomTheme.colors.primary,
+  },
+  notificationCard: {
+    marginVertical: 5,
+    marginHorizontal: 10,
+    borderColor: CustomTheme.colors.notification,
+    borderWidth: 1,
+  },
+  badge: {
+    backgroundColor: CustomTheme.colors.accent,
+    color: 'white',
+  },
+  toggleButton: {
+    backgroundColor: CustomTheme.colors.secondary,
+    padding: 10,
+    elevation: 4,
+    borderRadius: CustomTheme.roundness,
+  },
+  toggleButtonText: {
+    color: CustomTheme.colors.text,
+  },
+});
+
+
+
 
 const StatCard = ({ label, count, styles }) => (
   <View style={styles.statCard}>

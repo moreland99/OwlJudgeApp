@@ -65,6 +65,8 @@ const AdminStackNavigator = () => (
     <AdminStack.Screen name="ProjectSubmission" component={ProjectSubmissionScreen} />
     <AdminStack.Screen name="ScoringFeedback" component={ScoringScreen} />
     <AdminStack.Screen name="AssignJudges" component={AssignJudgesScreen} />
+    <AdminStack.Screen name="EventEditForm" component={EventEditForm} />
+
 
   </AdminStack.Navigator>
 );
