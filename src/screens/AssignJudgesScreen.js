@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Card, Button } from 'react-native-paper';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
@@ -154,17 +154,24 @@ const AssignJudgesScreen = () => {
     setSelectedProject(project);
   };
 
+  const handleSelectProject = (project) => {
+    if (selectedProjects.some(selected => selected.id === project.id)) {
+      setSelectedProjects(selectedProjects.filter(selected => selected.id !== project.id));
+    } else {
+      setSelectedProjects([...selectedProjects, project]);
+    }
+  };
+
   const assignJudgeToEventAndProject = () => {
-    if (!selectedEvent || !selectedJudge || !selectedProject) {
-      Alert.alert(
-        "Selection Missing",
-        "Please select an event, a judge, and a project."
-      );
+    if (!selectedEvent || !selectedJudge || selectedProjects.length === 0) {
+      Alert.alert("Selection Missing", "Please select an event, a judge, and at least one project.");
       return;
     }
 
     const db = getDatabase(app);
     const updates = {};
+
+    
     updates[
       `judges/${selectedJudge.id}/assignedEvents/${selectedEvent.id}`
     ] = true;
@@ -188,98 +195,106 @@ const AssignJudgesScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Button
-        icon="arrow-left"
-        mode="outlined"
-        onPress={() => navigation.goBack()}
-      >
-        Go Back
-      </Button>
-
-      <View style={styles.section}>
-        <TextInput
-          placeholder="Search for an event"
-          value={searchEvent}
-          onChangeText={handleSearchEvent}
-          style={styles.searchInput}
-        />
-        <FlatList
-          data={filteredEvents}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => setSelectedEvent(item)}
-              style={[
-                styles.listItem,
-                {
-                  backgroundColor:
-                    item.id === selectedEvent?.id ? "#e0e0e0" : "#f9f9f9",
-                },
-              ]}
-            >
-              <Text style={styles.listItemText}>{item.name}</Text>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-
-      {selectedEvent && (
-        <View style={styles.section}>
-          <Text style={styles.label}>Projects for the selected event:</Text>
-          <FlatList
-            data={filteredProjects}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => setSelectedProject(item)}
-                style={[
-                  styles.listItem,
-                  {
-                    backgroundColor:
-                      item.id === selectedProject?.id ? "#e0e0e0" : "#f9f9f9",
-                  },
-                ]}
-              >
-                <Text style={styles.listItemText}>{item.title}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
-      <TextInput
-        placeholder="Search for a judge"
-        value={searchJudge}
-        onChangeText={handleSearchJudge}
-        style={styles.searchInput}
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
       <FlatList
-        data={filteredJudges}
+        data={filteredEvents}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <>
+            <Button
+              icon="arrow-left"
+              mode="outlined"
+              onPress={() => navigation.goBack()}
+            >
+              Go Back
+            </Button>
+            <TextInput
+              placeholder="Search for an event"
+              value={searchEvent}
+              onChangeText={handleSearchEvent}
+              style={styles.searchInput}
+            />
+          </>
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => setSelectedJudge(item)}
+            onPress={() => setSelectedEvent(item)}
             style={[
               styles.listItem,
               {
-                backgroundColor:
-                  item.id === selectedJudge?.id ? "#e0e0e0" : "#f9f9f9",
+                backgroundColor: item.id === selectedEvent?.id ? "#e0e0e0" : "#f9f9f9",
               },
             ]}
           >
-            <Text style={styles.listItemText}>{item.email}</Text>
+            <Text style={styles.listItemText}>{item.name}</Text>
           </TouchableOpacity>
         )}
+        ListFooterComponent={
+          <>
+            {selectedEvent && (
+              <View style={styles.section}>
+                <Text style={styles.label}>Projects for the selected event:</Text>
+                <FlatList
+                  data={filteredProjects}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => setSelectedProject(item)}
+                      style={[
+                        styles.listItem,
+                        {
+                          backgroundColor: item.id === selectedProject?.id ? "#e0e0e0" : "#f9f9f9",
+                        },
+                      ]}
+                    >
+                      <Text style={styles.listItemText}>{item.title}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            )}
+            <TextInput
+              placeholder="Search for a judge"
+              value={searchJudge}
+              onChangeText={handleSearchJudge}
+              style={styles.searchInput}
+            />
+            <FlatList
+              data={filteredJudges}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => setSelectedJudge(item)}
+                  style={[
+                    styles.listItem,
+                    {
+                      backgroundColor: item.id === selectedJudge?.id ? "#e0e0e0" : "#f9f9f9",
+                    },
+                  ]}
+                >
+                  <Text style={styles.listItemText}>{item.email}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <Button
+              mode="contained"
+              onPress={assignJudgeToEventAndProject}
+              style={styles.button}
+            >
+              Assign Judge and Project
+            </Button>
+          </>
+        }
       />
-      <Button
-        mode="contained"
-        onPress={assignJudgeToEventAndProject}
-        style={styles.button}
-      >
-        Assign Judge and Project
-      </Button>
-    </View>
+    </KeyboardAvoidingView>
   );
+  
+  
+  
 };
 
 const styles = StyleSheet.create({
