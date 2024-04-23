@@ -3,7 +3,7 @@ import { View, SectionList, StyleSheet, TouchableOpacity, Text } from 'react-nat
 import { Card, Title, Paragraph } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get, onValue, off } from 'firebase/database';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
@@ -16,73 +16,61 @@ const ProjectListScreen = ({ navigation }) => {
     const user = auth.currentUser;
     if (user) {
         const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
-        // Using 'on' instead of 'get' to listen for real-time updates
         onValue(judgeProjectsRef, snapshot => {
             if (snapshot.exists()) {
                 const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
-                const projectDetailsPromises = projectIDs.map(id => 
-                    get(ref(db, `projects/${id}`)).then(projectSnapshot => {
+                projectIDs.forEach(projectId => {
+                    const projectRef = ref(db, `projects/${projectId}`);
+                    onValue(projectRef, projectSnapshot => {
                         if (projectSnapshot.exists()) {
-                            return get(ref(db, `scores/${id}/${user.uid}`)).then(scoreSnapshot => {
-                                return {
-                                    id: id,
+                            const scoreRef = ref(db, `scores/${projectId}/${user.uid}`);
+                            onValue(scoreRef, scoreSnapshot => {
+                                const projectData = {
+                                    id: projectId,
                                     ...projectSnapshot.val(),
                                     score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
                                 };
-                            });
+                                updateProjectsState(projectData);
+                            }, { onlyOnce: false });
                         }
-                    })
-                );
-
-                Promise.all(projectDetailsPromises).then(projects => {
-                    const scoredProjects = projects.filter(p => p.score !== undefined);
-                    const unscoredProjects = projects.filter(p => p.score === undefined);
-                    setProjectSections([
-                        { title: 'Scored Projects', data: scoredProjects },
-                        { title: 'Unscored Projects', data: unscoredProjects }
-                    ]);
+                    });
                 });
-            } else {
-                console.log('No projects are assigned to this judge.');
             }
         });
+
+        return () => {
+            off(judgeProjectsRef);
+            projectIDs.forEach(projectId => {
+                const projectRef = ref(db, `projects/${projectId}`);
+                off(projectRef);
+                const scoreRef = ref(db, `scores/${projectId}/${user.uid}`);
+                off(scoreRef);
+            });
+        };
     }
+  }, [auth, db]);  // Dependency array
 
-    // Return a function to unsubscribe when the component unmounts
-    return () => {
-        if (user) {
-            const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
-            off(judgeProjectsRef); // Detach the listener
-        }
-    };
-}, []); // Keep dependency array empty to mimic componentDidMount
+  function updateProjectsState(newProjectData) {
+    setProjectSections(prevSections => {
+      const scoredIndex = prevSections.findIndex(section => section.title === 'Scored Projects');
+      const unscoredIndex = prevSections.findIndex(section => section.title === 'Unscored Projects');
 
+      const newScoredProjects = [...prevSections[scoredIndex].data];
+      const newUnscoredProjects = prevSections[unscoredIndex].data.filter(p => p.id !== newProjectData.id);
 
-  const renderProject = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => {
-        if (!item.score) {
-          // Assuming 'item.id' is the projectId; adjust the property name based on your data structure
-          navigation.navigate('ProjectScoringScreen', { projectDetails: item, projectId: item.id });
-        }
-      }}
-      disabled={!!item.score}
-      style={{ opacity: item.score ? 0.7 : 1 }}
-    >
-      <Card style={[styles.item, { backgroundColor: CustomTheme.colors.surface }]}>
-        <Card.Content>
-          <Title style={{ color: CustomTheme.colors.onSurface }}>{item.title}</Title>
-          <Paragraph>{item.summary}</Paragraph>
-          {item.score && <Text>Score: {item.score}</Text>}
-        </Card.Content>
-      </Card>
-    </TouchableOpacity>
-  );
-  
+      if (newProjectData.score !== undefined) {
+        newScoredProjects.push(newProjectData);
+      } else {
+        newUnscoredProjects.push(newProjectData);
+      }
 
-  const renderSectionHeader = ({ section: { title } }) => (
-    <Text style={styles.header}>{title}</Text>
-  );
+      const newSections = [...prevSections];
+      newSections[scoredIndex].data = newScoredProjects;
+      newSections[unscoredIndex].data = newUnscoredProjects;
+
+      return newSections;
+    });
+  }
 
   return (
     <View style={styles.container}>
@@ -90,8 +78,28 @@ const ProjectListScreen = ({ navigation }) => {
       <SectionList
         sections={projectSections}
         keyExtractor={(item, index) => item.id + index}
-        renderItem={renderProject}
-        renderSectionHeader={renderSectionHeader}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => {
+              if (!item.score) {
+                navigation.navigate('ProjectScoringScreen', { projectId: item.id });
+              }
+            }}
+            disabled={!!item.score}
+            style={{ opacity: item.score ? 0.7 : 1 }}
+          >
+            <Card style={[styles.item, { backgroundColor: CustomTheme.colors.surface }]}>
+              <Card.Content>
+                <Title style={{ color: CustomTheme.colors.onSurface }}>{item.title}</Title>
+                <Paragraph>{item.summary}</Paragraph>
+                {item.score && <Text>Score: {item.score}</Text>}
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
+        )}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={styles.header}>{title}</Text>
+        )}
       />
     </View>
   );
@@ -117,5 +125,6 @@ const styles = StyleSheet.create({
 });
 
 export default ProjectListScreen;
+
 
 
