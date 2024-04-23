@@ -148,22 +148,8 @@ const AssignJudgesScreen = () => {
     }
   };
 
-  // Make sure to update the selectedProject with an object, not just the id
-  const onProjectSelected = (itemValue) => {
-    const project = projects.find((p) => p.id === itemValue);
-    setSelectedProject(project);
-  };
-
-  const handleSelectProject = (project) => {
-    if (selectedProjects.some(selected => selected.id === project.id)) {
-      setSelectedProjects(selectedProjects.filter(selected => selected.id !== project.id));
-    } else {
-      setSelectedProjects([...selectedProjects, project]);
-    }
-  };
-
   const assignJudgeToEventAndProject = () => {
-    if (!selectedEvent || !selectedJudge || selectedProjects.length === 0) {
+    if (!selectedEvent || !selectedJudge || selectedProject.length === 0) {
       Alert.alert("Selection Missing", "Please select an event, a judge, and at least one project.");
       return;
     }
