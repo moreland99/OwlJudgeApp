@@ -18,7 +18,6 @@ import LoginScreen from './src/screens/LoginScreen';
 import CreateAccount from './src/screens/CreateAccount'; 
 import EventAddScreen from './src/screens/EventAddScreen';
 import JudgeListScreen from './src/screens/JudgeListScreen';
-import LogoutButton from './src/components/LogoutButton';
 import AssignJudgesScreen from './src/screens/AssignJudgesScreen';
 // Screens specific to Judge
 import JudgeDashboardScreen from './src/screens/JudgeDashboardScreen';
@@ -28,6 +27,7 @@ import ProjectSubmissionScreen from './src/screens/ProjectSubmissionScreen';
 import ScoringScreen from './src/screens/ScoringScreen';
 import ProjectListScreen from './src/screens/ProjectListScreen';
 import JudgeProjectsScreen from './src/screens/JudgeProjectsScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const EventStack = createNativeStackNavigator();
@@ -86,6 +86,8 @@ const JudgeTabNavigator = ({ isAdmin}) => (
           iconName = focused ? 'briefcase' : 'briefcase-outline';
         } else if (route.name === 'Scoring') {
           iconName = focused ? 'pencil' : 'pencil-outline';
+        } else if (route.name === 'Profile') {
+          iconName = focused ? 'person' : 'person-outline';
         } else if (route.name === 'Admin') {
           iconName = focused ? 'shield' : 'shield-outline';
         }
@@ -99,6 +101,7 @@ const JudgeTabNavigator = ({ isAdmin}) => (
     <Tab.Screen name="Dashboard" component={JudgeDashboardScreen} />
     <Tab.Screen name="Events" component={EventStackNavigator} /> 
     <Tab.Screen name="Projects" component={ProjectsStackNavigator} />
+    <Tab.Screen name="Profile" component={ProfileScreen} />
      {/* Conditionally render the Admin tab if isAdmin is true */}
 {isAdmin && (
   <Tab.Screen

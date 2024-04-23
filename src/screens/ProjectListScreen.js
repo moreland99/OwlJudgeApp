@@ -13,42 +13,39 @@ const ProjectListScreen = ({ navigation }) => {
   const db = getDatabase(app);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (user) {
+    const authUnsub = auth.onAuthStateChanged(user => {
+      if (user) {
         const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
-        onValue(judgeProjectsRef, snapshot => {
-            if (snapshot.exists()) {
-                const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
-                projectIDs.forEach(projectId => {
-                    const projectRef = ref(db, `projects/${projectId}`);
-                    onValue(projectRef, projectSnapshot => {
-                        if (projectSnapshot.exists()) {
-                            const scoreRef = ref(db, `scores/${projectId}/${user.uid}`);
-                            onValue(scoreRef, scoreSnapshot => {
-                                const projectData = {
-                                    id: projectId,
-                                    ...projectSnapshot.val(),
-                                    score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
-                                };
-                                updateProjectsState(projectData);
-                            }, { onlyOnce: false });
-                        }
-                    });
-                });
-            }
-        });
-
-        return () => {
-            off(judgeProjectsRef);
+        const unsub = onValue(judgeProjectsRef, snapshot => {
+          if (snapshot.exists()) {
+            const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
             projectIDs.forEach(projectId => {
-                const projectRef = ref(db, `projects/${projectId}`);
-                off(projectRef);
-                const scoreRef = ref(db, `scores/${projectId}/${user.uid}`);
-                off(scoreRef);
+              const projectRef = ref(db, `projects/${projectId}`);
+              onValue(projectRef, projectSnapshot => {
+                if (projectSnapshot.exists()) {
+                  const scoreRef = ref(db, `scores/${projectId}/${user.uid}`);
+                  onValue(scoreRef, scoreSnapshot => {
+                    const projectData = {
+                      id: projectId,
+                      ...projectSnapshot.val(),
+                      score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
+                    };
+                    updateProjectsState(projectData);
+                  }, { onlyOnce: true });
+                }
+              }, { onlyOnce: true });
             });
+          }
+        });
+        return () => {
+          unsub();
+          off(judgeProjectsRef);
         };
-    }
-  }, [auth, db]);  // Dependency array
+      }
+    });
+    return () => authUnsub();
+  }, [auth, db]);
+  
 
   function updateProjectsState(newProjectData) {
     setProjectSections(prevSections => {
