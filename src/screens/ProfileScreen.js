@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform, Text } from 'react-native';
 import { TextInput, Button, Card, Title } from 'react-native-paper';
 import { getAuth, updateProfile, updateEmail, updatePassword } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
@@ -68,7 +68,11 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "position"} // Changed to "position" for Android
+      keyboardVerticalOffset={Platform.OS === "ios" ? 110 : 84}  // Adjusted for typical header + status bar height
+    >
             <ScrollView contentContainerStyle={styles.scrollView}>
                 <LogoComponent />
                 <Card style={styles.card}>
@@ -89,25 +93,22 @@ const ProfileScreen = ({ navigation }) => {
                             style={styles.input}
                         />
                         <TextInput
-                            mode="outlined"
-                            label="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                            style={styles.input}
-                        />
-                        <TextInput
-                            mode="outlined"
-                            label="Password (leave blank to keep current)"
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                            style={styles.input}
-                        />
-                        <Button 
-                            mode="contained"
-                            onPress={handleUpdate}
-                            style={styles.button}
-                        >
+              mode="outlined"
+              label="New Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+              placeholder="Enter new password"
+            />
+            <Text style={styles.passwordInstructions}>
+              Leave the password field blank to keep the current password.
+            </Text>
+            <Button 
+              mode="contained"
+              onPress={handleUpdate}
+              style={styles.button}
+            >
                             Save Changes
                         </Button>
                     </Card.Content>
