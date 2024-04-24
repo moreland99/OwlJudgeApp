@@ -1,27 +1,24 @@
-import React from 'react';
+// src/components/LogoutButton.js
+import React, { useContext } from 'react';
 import { Button, Alert } from 'react-native';
 import { auth } from '../firebase/firebaseConfig';
 import { signOut } from 'firebase/auth';
-import { useNavigation } from '@react-navigation/native';
+import { FirebaseContext } from '../context/FirebaseContext';
 
 const LogoutButton = () => {
-  const navigation = useNavigation();
+  const { detachListeners } = useContext(FirebaseContext);
 
   const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
-        Alert.alert('Logged Out', 'You have been successfully logged out.');
-        // Navigate to the login screen or any other screen after logout
-        // Example: navigation.navigate('Login');
-      })
-      .catch((error) => {
-        console.error('Error logging out:', error.message);
-      });
+    detachListeners();  // Detach all Firebase listeners before logging out
+    signOut(auth).then(() => {
+      Alert.alert('Logged Out', 'You have been successfully logged out.');
+      // Additional logout logic here
+    }).catch(error => {
+      console.error('Error logging out:', error.message);
+    });
   };
 
-  return (
-    <Button title="Logout" onPress={handleLogout} />
-  );
+  return <Button title="Logout" onPress={handleLogout} />;
 }
 
-export default LogoutButton; 
+export default LogoutButton;
