@@ -59,7 +59,11 @@ const ProjectSubmissionScreen = ({ navigation }) => {
   
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 150 : 0}
+    >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <LogoComponent />
       <Text style={[styles.title, {color: theme.colors.text}]}>Submit Your Project</Text>

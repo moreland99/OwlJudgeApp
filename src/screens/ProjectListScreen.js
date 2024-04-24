@@ -1,63 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { View, SectionList, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, SectionList, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getDatabase, ref, onValue, off } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
 import CustomTheme from '../../theme';
 
 const ProjectListScreen = ({ navigation }) => {
   const [projectSections, setProjectSections] = useState([{ title: 'Scored Projects', data: [] }, { title: 'Unscored Projects', data: [] }]);
-  const auth = getAuth();
+  const auth = getAuth(app);
   const db = getDatabase(app);
 
   useEffect(() => {
-    const authUnsub = auth.onAuthStateChanged(user => {
+    const authUnsub = onAuthStateChanged(auth, (user) => {
       if (user) {
+        console.log('User is logged in:', user.uid); // Log the user ID
         const judgeProjectsRef = ref(db, `judges/${user.uid}/assignedProjects`);
-        const unsub = onValue(judgeProjectsRef, snapshot => {
+        const unsub = onValue(judgeProjectsRef, (snapshot) => {
           if (snapshot.exists()) {
             const projectIDs = Object.keys(snapshot.val()).filter(key => snapshot.val()[key] === true);
-            projectIDs.forEach(projectId => {
+
+            // Clear previous projects data before fetching new
+            console.log('Clearing project sections data'); // Log data clearing
+            setProjectSections([{ title: 'Scored Projects', data: [] }, { title: 'Unscored Projects', data: [] }]);
+
+            projectIDs.forEach((projectId) => {
               const projectRef = ref(db, `projects/${projectId}`);
-              onValue(projectRef, projectSnapshot => {
+              onValue(projectRef, (projectSnapshot) => {
                 if (projectSnapshot.exists()) {
                   const scoreRef = ref(db, `scores/${projectId}/${user.uid}`);
-                  onValue(scoreRef, scoreSnapshot => {
+                  onValue(scoreRef, (scoreSnapshot) => {
                     const projectData = {
                       id: projectId,
                       ...projectSnapshot.val(),
                       score: scoreSnapshot.exists() ? scoreSnapshot.val().score : undefined
                     };
+                    console.log('Project data received:', projectData); // Log project data received
                     updateProjectsState(projectData);
-                  }, { onlyOnce: true });
+                  });
                 }
-              }, { onlyOnce: true });
+              });
             });
           }
         });
         return () => {
-          unsub();
-          off(judgeProjectsRef);
+          console.log('Detaching listeners on logout'); // Log listener detachment
+          unsub();  // Detach listener for judgeProjectsRef
+          off(judgeProjectsRef);  // Ensure all listeners are turned off when the component unmounts
         };
+      } else {
+        console.log('User is not logged in or has logged out.'); // Log the logout or not logged in state
       }
     });
-    return () => authUnsub();
+    return () => {
+      console.log('Cleaning up auth listener'); // Log the cleanup
+      authUnsub();  // Clean up the auth state listener
+    };
   }, [auth, db]);
-  
 
   function updateProjectsState(newProjectData) {
+    console.log('Updating projects state with new data:', newProjectData); // Log the state update attempt
     setProjectSections(prevSections => {
       const scoredIndex = prevSections.findIndex(section => section.title === 'Scored Projects');
       const unscoredIndex = prevSections.findIndex(section => section.title === 'Unscored Projects');
 
-      const newScoredProjects = [...prevSections[scoredIndex].data];
-      const newUnscoredProjects = prevSections[unscoredIndex].data.filter(p => p.id !== newProjectData.id);
+      let newScoredProjects = [...prevSections[scoredIndex].data];
+      let newUnscoredProjects = [...prevSections[unscoredIndex].data];
+
+      const scoredProjectIndex = newScoredProjects.findIndex(p => p.id === newProjectData.id);
+      const unscoredProjectIndex = newUnscoredProjects.findIndex(p => p.id === newProjectData.id);
 
       if (newProjectData.score !== undefined) {
-        newScoredProjects.push(newProjectData);
-      } else {
+        if (scoredProjectIndex === -1) {
+          newScoredProjects.push(newProjectData);
+        }
+        if (unscoredProjectIndex !== -1) {
+          newUnscoredProjects.splice(unscoredProjectIndex, 1);
+        }
+      } else if (unscoredProjectIndex === -1) {
         newUnscoredProjects.push(newProjectData);
       }
 
@@ -65,6 +86,8 @@ const ProjectListScreen = ({ navigation }) => {
       newSections[scoredIndex].data = newScoredProjects;
       newSections[unscoredIndex].data = newUnscoredProjects;
 
+      console.log('New scored projects:', newScoredProjects); // Log the new scored projects array
+      console.log('New unscored projects:', newUnscoredProjects); // Log the new unscored projects array
       return newSections;
     });
   }
@@ -122,6 +145,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProjectListScreen;
-
-
-
