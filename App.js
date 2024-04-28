@@ -28,6 +28,7 @@ import ScoringScreen from './src/screens/ScoringScreen';
 import ProjectListScreen from './src/screens/ProjectListScreen';
 import JudgeProjectsScreen from './src/screens/JudgeProjectsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import AdminScoreScreen from './src/screens/AdminScoreScreen';
 
 const Stack = createNativeStackNavigator(); // For authentication flow and modal screens
 const EventStack = createNativeStackNavigator();
@@ -59,7 +60,7 @@ const AdminStackNavigator = () => (
     <AdminStack.Screen name="EventDashboard" component={EventDashboardScreen} />
     <AdminStack.Screen name="JudgeList" component={JudgeListScreen} />
     <AdminStack.Screen name="ProjectSubmission" component={ProjectSubmissionScreen} />
-    <AdminStack.Screen name="ScoringFeedback" component={ScoringScreen} />
+    <AdminStack.Screen name="AdminScore" component={AdminScoreScreen} options={{ title: 'Admin Scores' }}/>
     <AdminStack.Screen name="AssignJudges" component={AssignJudgesScreen} />
     <EventStack.Screen name="AddEvent" component={EventAddScreen} options={{ title: 'Add Event' }} />
   </AdminStack.Navigator>
