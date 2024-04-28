@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { Modal, Button, TextInput } from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const EditJudgeForm = ({ isVisible, onClose, judge, onSave }) => {
   const [firstName, setFirstName] = useState(judge?.firstName || '');
@@ -24,6 +25,8 @@ const EditJudgeForm = ({ isVisible, onClose, judge, onSave }) => {
   // The Modal from react-native-paper needs to be used within the PaperProvider component
   return (
     <Modal visible={isVisible} onDismiss={onClose} contentContainerStyle={styles.modalContainer}>
+    <KeyboardAwareScrollView style={{ flex: 1 }}>
+    <View style={styles.innerContainer}>
       <Text style={styles.modalTitle}>Edit Judge</Text>
       <TextInput
         label="First Name"
@@ -52,6 +55,8 @@ const EditJudgeForm = ({ isVisible, onClose, judge, onSave }) => {
       <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
         Save Changes
       </Button>
+      </View>
+      </KeyboardAwareScrollView>
     </Modal>
   );
 };
@@ -65,6 +70,12 @@ const styles = StyleSheet.create({
     padding: 20,
     margin: 20,
     minHeight: 500,
+  },
+  innerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
   modalTitle: {
     fontSize: 20,
