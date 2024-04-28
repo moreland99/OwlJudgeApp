@@ -19,6 +19,7 @@ import CreateAccount from './src/screens/CreateAccount';
 import EventAddScreen from './src/screens/EventAddScreen';
 import JudgeListScreen from './src/screens/JudgeListScreen';
 import AssignJudgesScreen from './src/screens/AssignJudgesScreen';
+import UploadCsvScreen from './src/screens/UploadCsvScreen';
 // Screens specific to Judge
 import JudgeDashboardScreen from './src/screens/JudgeDashboardScreen';
 import EventListScreen from './src/screens/EventListScreen';
@@ -63,6 +64,7 @@ const AdminStackNavigator = () => (
     <AdminStack.Screen name="AdminScore" component={AdminScoreScreen} options={{ title: 'Admin Scores' }}/>
     <AdminStack.Screen name="AssignJudges" component={AssignJudgesScreen} />
     <EventStack.Screen name="AddEvent" component={EventAddScreen} options={{ title: 'Add Event' }} />
+    <AdminStack.Screen name="UploadCsv" component={UploadCsvScreen} options={{ title: 'Upload CSV' }} />
   </AdminStack.Navigator>
 );
 
