@@ -104,7 +104,7 @@ onValue(requestsRef, (snapshot) => {
           <QuickLinkButton title=" Events" iconName="calendar-check" onPress={() => navigation.navigate('EventDashboard')} styles={styles} />
           <QuickLinkButton title=" Judges" iconName="account-group" onPress={() => navigation.navigate('JudgeList')} styles={styles} />
           <QuickLinkButton title=" Projects" iconName="book-open-page-variant" onPress={() => navigation.navigate('ProjectSubmission')} styles={styles} />
-          <QuickLinkButton title=" Scoring" iconName="scoreboard" onPress={() => navigation.navigate('Scoring & Feedback')} styles={styles} />
+          <QuickLinkButton title=" Scores" iconName="scoreboard" onPress={() => navigation.navigate('AdminScore')} styles={styles} />
           <QuickLinkButton title=" Assign" iconName="account-plus" onPress={() => navigation.navigate('AssignJudges')} styles={styles} />
         </View>
 
