@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View, Platform } from 'react-native';
+import {ScrollView, StyleSheet, View, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Button, TextInput, Text, useTheme } from 'react-native-paper';
 import LogoComponent from '../components/LogoComponent';
 import { getDatabase, ref, push, onValue, set } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const ProjectSubmissionScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -59,12 +60,12 @@ const ProjectSubmissionScreen = ({ navigation }) => {
   
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 150 : 0}
-    >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <KeyboardAwareScrollView
+  contentContainerStyle={[styles.container, { justifyContent: 'center' }]} // Add specific layout styles here
+  extraScrollHeight={20}
+  enableOnAndroid={true}
+  keyboardShouldPersistTaps="handled"
+>
       <LogoComponent />
       <Text style={[styles.title, {color: theme.colors.text}]}>Submit Your Project</Text>
       <Picker
@@ -109,8 +110,7 @@ const ProjectSubmissionScreen = ({ navigation }) => {
       >
         Submit Project
       </Button>
-    </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: 'center',
   },
   picker: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   input: {
     marginBottom: 10,

@@ -36,19 +36,31 @@ const JudgeDashboardScreen = () => {
               get(ref(db, `events/${eventId}`))
             );
             Promise.all(eventDetailsPromises).then(eventSnapshots => {
-              const loadedEvents = eventSnapshots.map(snap => ({
-                id: snap.key,
-                ...snap.val(),
-              }));
+              const loadedEvents = eventSnapshots.map(snap => {
+                const eventData = snap.val();
+                if (eventData) {
+                  return {
+                    id: snap.key,
+                    ...eventData,
+                  };
+                } else {
+                  console.log(`No data available for event with key: ${snap.key}`);
+                  return null; // or some other placeholder to indicate no data was found
+                }
+              }).filter(event => event !== null); // This filters out any null values resulting from missing event data
               const validEvents = loadedEvents.filter(event => isAfter(new Date(event.endDate), new Date()));
               setAssignedEvents(loadedEvents);
               setUpcomingEvents(validEvents);
+            }).catch(error => {
+              console.error('Error fetching event details:', error);
             });
           } else {
             console.log('No assigned events data found for this judge');
           }
-        });
-      }
+        }).catch(error => {
+          console.error('Error fetching event details:', error);
+      });
+    }
     });
   
     return () => unsubscribe(); 

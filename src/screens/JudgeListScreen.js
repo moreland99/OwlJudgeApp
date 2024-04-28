@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet, Text, TextInput, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Button, Card, Title, Paragraph, useTheme, Modal } from 'react-native-paper';
 import { getDatabase, ref, onValue, remove, update } from 'firebase/database';
 import EditJudgeForm from './EditJudgeForm';
